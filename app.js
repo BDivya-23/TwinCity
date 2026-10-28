@@ -33,9 +33,20 @@ function selectArea(name) {
     document.getElementById('approve-btn').disabled = true;
 }
 
+// === QUICK PROPOSE (Fixes the missing function in your HTML) ===
+function quickPropose(text) {
+    document.getElementById('proposal-input').value = text;
+    evaluateProposal();
+}
+
 // === EVALUATE PROPOSAL ===
 function evaluateProposal() {
     const text = document.getElementById('proposal-input').value.toLowerCase();
+    if (!cityState.selectedArea) {
+        alert("Please click a location on the map first!");
+        return;
+    }
+
     const area = cityState.areas[cityState.selectedArea];
     let matched = null;
 
@@ -67,7 +78,6 @@ function approveProposal() {
     const area = cityState.areas[cityState.selectedArea];
 
     if (cityState.budget < currentProposal.cost) {
-        // Visual warning instead of a boring alert
         const responseBox = document.getElementById('advisor-response');
         responseBox.innerHTML = `<span style="color:#ef4444; font-weight:bold;">❌ INSUFFICIENT FUNDS!</span><br>
         This solution costs ₹${currentProposal.cost} Cr, but you only have ₹${cityState.budget} Cr left.<br>
@@ -76,15 +86,14 @@ function approveProposal() {
     }
 
     cityState.budget -= currentProposal.cost;
-
     area.flood = Math.max(0, area.flood - currentProposal.impact);
     area.solved = true;
     
     // Smarter Happiness Logic
-    let happinessBonus = 5; // Default
-    if (currentProposal.keywords.includes('park')) happinessBonus = 15; // Parks make people very happy
-    if (currentProposal.keywords.includes('drain')) happinessBonus = 10; // Fixing floods makes people happy
-    if (currentProposal.keywords.includes('metro')) happinessBonus = 5;  // Metro is good but construction is annoying
+    let happinessBonus = 5; 
+    if (currentProposal.keywords.includes('park')) happinessBonus = 15; 
+    if (currentProposal.keywords.includes('drain')) happinessBonus = 10; 
+    if (currentProposal.keywords.includes('metro')) happinessBonus = 5;  
     
     cityState.happiness = Math.min(100, cityState.happiness + happinessBonus);
 
@@ -93,6 +102,8 @@ function approveProposal() {
     document.getElementById('approve-btn').disabled = true;
     document.getElementById('advisor-response').innerHTML +=
         `<br><br><span style="color:#4ade80">✔ Implemented! Budget: ₹${cityState.budget} Cr</span>`;
+        
+    checkWinCondition(); // Check if game is won
 }
 
 // === UPDATE UI ===
@@ -100,42 +111,52 @@ function updateDashboard() {
     document.getElementById('budget').textContent = `₹${cityState.budget} Cr`;
     document.getElementById('happiness').textContent = `${cityState.happiness}%`;
     
-    // Update the map visuals
+    // Update the REAL MAP visuals instead of old HTML buttons
     for (let name in cityState.areas) {
-        const btn = document.getElementById(`btn-${name}`);
-        if (btn) {
-            if (cityState.areas[name].solved) {
-                btn.classList.add('solved');
-                btn.innerHTML = `✅ ${name} (Solved)`;
-            }
+        const marker = mapMarkers[name];
+        if (marker && cityState.areas[name].solved) {
+            // Change the marker to Green
+            marker.setIcon(L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div class='map-marker solved'>✅ ${name} (Solved)</div>`,
+                iconSize: [150, 30],
+                iconAnchor: [75, 15]
+            }));
         }
     }
 
     if (cityState.selectedArea) selectArea(cityState.selectedArea);
 }
 
-// Initialize on load// Initialize on load
+// === INITIALIZE ON LOAD ===
 window.onload = function() {
     const savedState = localStorage.getItem('twinCityState');
     if (savedState) {
-        // Load saved game
         Object.assign(cityState, JSON.parse(savedState));
     }
+    
+    // Initialize the map first, THEN update the dashboard
+    initMap();
     updateDashboard();
+    checkWinCondition(); // Check if they already won before refreshing
 };
 
 // Save game after every decision
 function saveGame() {
     localStorage.setItem('twinCityState', JSON.stringify(cityState));
 }
-const allSolved = Object.values(cityState.areas).every(a => a.solved);
+
+// === WIN CONDITION ===
+function checkWinCondition() {
+    const allSolved = Object.values(cityState.areas).every(a => a.solved);
     if (allSolved) {
         setTimeout(() => {
             alert("🏆 MISSION ACCOMPLISHED!\n\nYou have successfully resolved all major crises in Chennai! The citizens thank you, Mayor.");
         }, 500);
     }
-// Quick Propose for the What If Simulator
-// Quick Propose for the What If Simulator
+}
+
+// === WHAT IF SIMULATOR ===
 function simulateWhatIf(type) {
     if (!cityState.selectedArea) {
         alert("Please select an area on the map first!");
@@ -166,5 +187,50 @@ function simulateWhatIf(type) {
         document.getElementById('proposal-input').value = "Build a new drainage system";
     }
     
-    evaluateProposal(); // Automatically runs the AI advisor
+    evaluateProposal(); 
+}
+
+// ==========================================
+// ===== REAL INTERACTIVE MAP SETUP =========
+// ==========================================
+let map;
+let mapMarkers = {}; // Store markers so we can change their color later
+
+function initMap() {
+    // 1. Initialize map centered on Chennai
+    map = L.map('map').setView([13.0500, 80.2100], 11);
+
+    // 2. Add Dark Mode map layer
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 19
+    }).addTo(map);
+
+    // 3. Define locations
+    const locations = [
+        { name: 'Velachery', coords: [12.9750, 80.2210] },
+        { name: 'Vadapalani', coords: [13.0503, 80.2121] },
+        { name: 'Porur', coords: [13.0358, 80.1568] }
+    ];
+
+    // 4. Add Markers to Map
+    locations.forEach(loc => {
+        const customIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: `<div class='map-marker'>📍 ${loc.name}</div>`,
+            iconSize: [100, 30],
+            iconAnchor: [50, 15]
+        });
+
+        const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
+        
+        // Save marker reference so updateDashboard can find it
+        mapMarkers[loc.name] = marker;
+
+        // Click event on marker
+        marker.on('click', function() {
+            selectArea(loc.name); 
+        });
+    });
 }
