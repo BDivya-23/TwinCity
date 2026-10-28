@@ -84,10 +84,18 @@ function approveProposal() {
 }
 
 // === UPDATE UI ===
-function updateDashboard() {
-    document.getElementById('budget').textContent = `₹${cityState.budget} Cr`;
-    document.getElementById('happiness').textContent = `${cityState.happiness}%`;
-    if (cityState.selectedArea) selectArea(cityState.selectedArea);
+/* Solved state for map buttons */
+.area-btn.solved {
+    background: #10b981 !important; /* Green */
+    border-color: #10b981 !important;
+    color: white !important;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+}
+
+/* Red border for unsolved problems */
+.area-btn:not(.solved) {
+    border-color: #ef4444 !important; /* Red */
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
 }
 
 // Initialize on load// Initialize on load
