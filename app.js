@@ -8,6 +8,13 @@ const cityState = {
     }
 };
 
+// MOVED THIS OUTSIDE initMap SO DRIVING MODE CAN ACCESS IT
+const locations = [ 
+    { name: 'Velachery', coords: [12.9750, 80.2210] }, 
+    { name: 'Vadapalani', coords: [13.0503, 80.2121] }, 
+    { name: 'Porur', coords: [13.0358, 80.1568] } 
+];
+
 const advisorRules = [
     { keywords: ['drain', 'water', 'flood'], cost: 20, impact: 30, text: "Drainage system: reduces flooding significantly. Estimated cost: ₹20 crore. May cause 3 months of local disruption." },
     { keywords: ['metro', 'train', 'transport'], cost: 40, impact: 25, text: "Metro extension: improves connectivity and traffic. Estimated cost: ₹40 crore. High construction impact." },
@@ -136,7 +143,7 @@ function simulateWhatIf(type) {
 function initMap() {
     map = L.map('map', { dragging: true, zoomControl: true }).setView([13.0500, 80.2100], 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-    const locations = [ { name: 'Velachery', coords: [12.9750, 80.2210] }, { name: 'Vadapalani', coords: [13.0503, 80.2121] }, { name: 'Porur', coords: [13.0358, 80.1568] } ];
+    
     locations.forEach(loc => {
         const customIcon = L.divIcon({ className: 'custom-div-icon', html: `<div class='map-marker'>📍 ${loc.name}</div>`, iconSize: [100, 30], iconAnchor: [50, 15] });
         const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
@@ -149,31 +156,34 @@ function initMap() {
 // === MANUAL DRIVING PHYSICS ENGINE ===
 // ==========================================
 
-function openVehicleModal() { 
-    console.log("Opening Vehicle Modal"); // Debug log
-    document.getElementById('vehicle-modal').style.display = 'flex'; 
-}
-
+function openVehicleModal() { document.getElementById('vehicle-modal').style.display = 'flex'; }
 function closeModals() {
     document.getElementById('vehicle-modal').style.display = 'none';
     document.getElementById('hazard-modal').style.display = 'none';
 }
 
 function startDriving(type) {
-    console.log("Starting driving mode for: " + type); // Debug log
     closeModals();
-    
     gameState.isDriving = true;
     gameState.isPaused = false;
     gameState.vehicleType = type;
-    gameState.lat = 13.0358; // Start at Porur
-    gameState.lng = 80.1568;
     gameState.speed = 0;
-    gameState.heading = 0; // Face North
+    gameState.heading = 0;
     gameState.score = 0;
     hazards.forEach(h => h.triggered = false);
 
-    // Show UI elements
+    // --- SPAWN AT SELECTED AREA OR DEFAULT TO PORUR ---
+    let spawnLat = 13.0358;
+    let spawnLng = 80.1568;
+    
+    if (cityState.selectedArea) {
+        const loc = locations.find(l => l.name === cityState.selectedArea);
+        if (loc) { spawnLat = loc.coords[0]; spawnLng = loc.coords[1]; }
+    }
+    
+    gameState.lat = spawnLat;
+    gameState.lng = spawnLng;
+
     document.getElementById('driving-hud').style.display = 'block';
     document.getElementById('nav-banner').style.display = 'flex';
     document.getElementById('driving-vignette').style.display = 'block'; 
@@ -181,19 +191,21 @@ function startDriving(type) {
     document.getElementById('drive-btn').style.background = "#ef4444";
     document.getElementById('score-display').innerText = gameState.score;
 
-    // Zoom into the map
+    // Camera setup
     map.dragging.disable();
     map.setView([gameState.lat, gameState.lng], 17); 
 
     const vehicleEmoji = type === 'bike' ? '🏍️' : '🚗';
+    
+    // HIGHLY VISIBLE MARKER
     const vehicleIcon = L.divIcon({ 
         className: 'car-icon-container', 
-        html: `<div id="car-emoji" style="font-size: 35px; transition: transform 0.1s linear;">${vehicleEmoji}</div>`, 
-        iconSize: [35, 35], iconAnchor: [17, 17] 
+        html: `<div id="car-emoji" style="font-size: 26px; background: white; border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border: 3px solid #3b82f6; box-shadow: 0 4px 15px rgba(0,0,0,0.6); transition: transform 0.1s linear;">${vehicleEmoji}</div>`, 
+        iconSize: [45, 45], iconAnchor: [22, 22] 
     });
     
     if (gameState.vehicleMarker) map.removeLayer(gameState.vehicleMarker);
-    gameState.vehicleMarker = L.marker([gameState.lat, gameState.lng], { icon: vehicleIcon, zIndexOffset: 1000 }).addTo(map);
+    gameState.vehicleMarker = L.marker([gameState.lat, gameState.lng], { icon: vehicleIcon, zIndexOffset: 10000 }).addTo(map);
 
     requestAnimationFrame(gameLoop);
 }
@@ -211,7 +223,7 @@ function stopDriving() {
     map.setView([13.0500, 80.2100], 12); 
 }
 
-// Keyboard Controls
+// Keyboard Controls (Bound to Window to ensure focus)
 window.addEventListener('keydown', (e) => {
     if (!gameState.isDriving || gameState.isPaused) return;
     let key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
