@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TwinCity: Digital Chennai</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="map-container">
+        <button class="area-btn" id="velachery" onclick="selectArea('Velachery')">📍 Velachery (Flooding)</button>
+        <button class="area-btn" id="vadapalani" onclick="selectArea('Vadapalani')">📍 Vadapalani (Traffic)</button>
+        <button class="area-btn" id="porur" onclick="selectArea('Porur')">📍 Porur (Traffic)</button>
+    </div>
+
+    <div id="dashboard">
+        <h1>🏛️ Mayor Dashboard</h1>
+
+        <h2>City Status</h2>
+        <div class="stat"><span>Budget</span><span id="budget">₹100 Cr</span></div>
+        <div class="stat"><span>Citizen Happiness</span><span id="happiness">85%</span></div>
+
+        <h2>Selected Area</h2>
+        <div id="problem-panel">Click a location on the map to begin.</div>
+
+        <h2>Propose a Solution</h2>
+        <textarea id="proposal-input" placeholder="e.g., Build a new drainage system..."></textarea>
+        <button class="action" onclick="evaluateProposal()">🔍 Evaluate Proposal</button>
+        <div id="advisor-response"></div>
+        <button class="action" id="approve-btn" onclick="approveProposal()" disabled>✅ Approve & Implement</button>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
