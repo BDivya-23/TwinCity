@@ -1,19 +1,10 @@
 /* === RESET & BASE === */
-* { 
-    margin: 0; 
-    padding: 0; 
-    box-sizing: border-box; 
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #000;
-    color: #ffffff;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
-    
-    /* BULLETPROOF CSS GRID LAYOUT */
+    background: #000; color: #ffffff;
+    height: 100vh; width: 100vw; overflow: hidden;
     display: grid;
     grid-template-rows: 60px 1fr; 
     grid-template-columns: 1fr 480px; 
@@ -21,377 +12,99 @@ html, body {
 
 /* === TOP BAR === */
 #top-bar {
-    grid-row: 1;
-    grid-column: 1 / -1; 
+    grid-row: 1; grid-column: 1 / -1; 
     background: rgba(15, 23, 42, 0.95);
     backdrop-filter: blur(10px);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    display: flex; justify-content: space-between; align-items: center;
     padding: 0 30px;
     border-bottom: 2px solid rgba(59, 130, 246, 0.3);
     z-index: 1000;
 }
 
-.logo {
-    font-size: 20px;
-    font-weight: 800;
-    color: #f8fafc;
-    letter-spacing: 1px;
-}
-
-.badge {
-    background: #3b82f6;
-    color: white;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-}
+.logo { font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: 1px; }
+.badge { background: #3b82f6; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
 
 /* === INTERACTIVE MAP === */
 #map {
-    grid-row: 2;
-    grid-column: 1;
-    height: 100%;
-    width: 100%;
-    background: #e5e5e5; 
-    z-index: 1;
+    grid-row: 2; grid-column: 1;
+    height: 100%; width: 100%; background: #e5e5e5; z-index: 1;
 }
 
 /* === DASHBOARD === */
 #dashboard {
-    grid-row: 2;
-    grid-column: 2;
-    height: 100%;
-    padding: 25px;
+    grid-row: 2; grid-column: 2;
+    height: 100%; padding: 25px;
     background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
     border-left: 2px solid rgba(59, 130, 246, 0.3);
-    overflow-y: auto;
-    box-shadow: -10px 0 30px rgba(0,0,0,0.8);
-    z-index: 10;
+    overflow-y: auto; box-shadow: -10px 0 30px rgba(0,0,0,0.8); z-index: 10;
 }
 
-/* === DASHBOARD TYPOGRAPHY & UI === */
-h1 {
-    font-size: 24px;
-    font-weight: 700;
-    margin-bottom: 20px;
-    text-align: center;
-    color: #f8fafc;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-}
-
-h2 {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: #94a3b8;
-    margin: 25px 0 10px;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    padding-bottom: 5px;
-}
-
-.stat {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 15px;
-    background: rgba(30, 41, 59, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 8px;
-    margin-bottom: 8px;
-    font-size: 14px;
-}
-
-.stat span:last-child {
-    color: #10b981;
-    font-weight: bold;
-    font-size: 16px;
-}
-
-#problem-panel {
-    background: rgba(239, 68, 68, 0.15);
-    padding: 15px;
-    border-radius: 8px;
-    border-left: 4px solid #ef4444;
-    font-size: 14px;
-    line-height: 1.6;
-}
-
+h1 { font-size: 24px; font-weight: 700; margin-bottom: 20px; text-align: center; color: #f8fafc; }
+h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; margin: 25px 0 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
+.stat { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; margin-bottom: 8px; font-size: 14px; }
+.stat span:last-child { color: #10b981; font-weight: bold; font-size: 16px; }
+#problem-panel { background: rgba(239, 68, 68, 0.15); padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444; font-size: 14px; line-height: 1.6; }
 #problem-panel strong { color: #fca5a5; font-size: 16px; }
-
-textarea {
-    width: 100%;
-    height: 80px;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-    padding: 12px;
-    border-radius: 8px;
-    margin-top: 8px;
-    resize: none;
-    font-family: inherit;
-    transition: border-color 0.3s;
-}
+textarea { width: 100%; height: 80px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; padding: 12px; border-radius: 8px; margin-top: 8px; resize: none; font-family: inherit; transition: border-color 0.3s; }
 textarea:focus { outline: none; border-color: #3b82f6; }
-
-button.action {
-    width: 100%;
-    margin-top: 12px;
-    padding: 12px;
-    background: #3b82f6;
-    border: none;
-    color: white;
-    font-weight: 600;
-    font-size: 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.1s;
-}
+button.action { width: 100%; margin-top: 12px; padding: 12px; background: #3b82f6; border: none; color: white; font-weight: 600; font-size: 14px; border-radius: 8px; cursor: pointer; transition: background 0.3s, transform 0.1s; }
 button.action:hover { background: #2563eb; }
 button.action:active { transform: scale(0.98); }
 button.action:disabled { background: #475569; cursor: not-allowed; opacity: 0.7; }
-
 #approve-btn { background: #10b981; }
 #approve-btn:hover { background: #059669; }
+#advisor-response { margin-top: 15px; padding: 15px; background: rgba(59, 130, 246, 0.15); border-left: 4px solid #3b82f6; border-radius: 8px; font-size: 13px; line-height: 1.6; display: none; }
 
-#advisor-response {
-    margin-top: 15px;
-    padding: 15px;
-    background: rgba(59, 130, 246, 0.15);
-    border-left: 4px solid #3b82f6;
-    border-radius: 8px;
-    font-size: 13px;
-    line-height: 1.6;
-    display: none;
-}
+/* === PROGRESS BARS === */
+.progress-container { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; margin-bottom: 5px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
+.progress-bar { height: 100%; background: #3b82f6; border-radius: 4px; transition: width 0.5s ease-in-out, background-color 0.5s ease; }
 
-/* === GAME PROGRESS BARS === */
-.progress-container {
-    width: 100%;
-    height: 8px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    margin-bottom: 5px;
-    overflow: hidden;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
-}
+/* === MAP MARKERS === */
+.map-marker { background: rgba(15, 23, 42, 0.9); border: 2px solid #ef4444; color: #fff; padding: 8px 14px; border-radius: 30px; font-size: 14px; font-weight: 600; text-align: center; box-shadow: 0 0 15px rgba(239, 68, 68, 0.6); backdrop-filter: blur(4px); cursor: pointer; transition: all 0.3s ease; white-space: nowrap; }
+.map-marker:not(.solved) { animation: pulse-red 2s infinite; }
+.map-marker:hover { transform: scale(1.1) translateY(-2px); background: rgba(239, 68, 68, 0.9); color: white; }
+.map-marker.solved { border-color: #10b981 !important; background: rgba(16, 185, 129, 0.9) !important; box-shadow: 0 0 15px rgba(16, 185, 129, 0.6) !important; color: white; animation: none; }
+@keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
 
-.progress-bar {
-    height: 100%;
-    background: #3b82f6; 
-    border-radius: 4px;
-    transition: width 0.5s ease-in-out, background-color 0.5s ease;
-}
+/* === LEAFLET OVERRIDES === */
+.leaflet-div-icon { background: transparent !important; border: none !important; }
+.leaflet-bar a { background-color: #ffffff !important; color: #333 !important; border-bottom: 1px solid #ccc !important; }
+.leaflet-bar a:hover { background-color: #f4f4f4 !important; color: #000 !important; }
 
-/* === MAP MARKERS (Glowing Pins) === */
-.map-marker {
-    background: rgba(15, 23, 42, 0.9); 
-    border: 2px solid #ef4444;
-    color: #fff;
-    padding: 8px 14px;
-    border-radius: 30px;
-    font-size: 14px;
-    font-weight: 600;
-    text-align: center;
-    box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
-    backdrop-filter: blur(4px);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-}
-
-.map-marker:not(.solved) {
-    animation: pulse-red 2s infinite;
-}
-
-.map-marker:hover {
-    transform: scale(1.1) translateY(-2px);
-    background: rgba(239, 68, 68, 0.9);
-    color: white;
-}
-
-.map-marker.solved {
-    border-color: #10b981 !important;
-    background: rgba(16, 185, 129, 0.9) !important;
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6) !important;
-    color: white;
-    animation: none;
-}
-
-@keyframes pulse-red {
-    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-    70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-}
-
-/* === LEAFLET MAP OVERRIDES === */
-.leaflet-div-icon {
-    background: transparent !important;
-    border: none !important;
-}
-
-.leaflet-bar a {
-    background-color: #ffffff !important;
-    color: #333 !important;
-    border-bottom: 1px solid #ccc !important;
-}
-.leaflet-bar a:hover {
-    background-color: #f4f4f4 !important;
-    color: #000 !important;
-}
-
-/* === FLOATING TEXT ANIMATION === */
-.floating-text {
-    position: fixed;
-    font-size: 28px;
-    font-weight: 800;
-    pointer-events: none;
-    animation: floatUp 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-    z-index: 9999;
-    text-shadow: 0 4px 10px rgba(0,0,0,0.8);
-}
-
-@keyframes floatUp {
-    0% { opacity: 0; transform: translateY(0) scale(0.8); }
-    20% { opacity: 1; transform: translateY(-20px) scale(1.1); }
-    100% { opacity: 0; transform: translateY(-80px) scale(1); }
-}
+/* === FLOATING TEXT === */
+.floating-text { position: fixed; font-size: 28px; font-weight: 800; pointer-events: none; animation: floatUp 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; z-index: 9999; text-shadow: 0 4px 10px rgba(0,0,0,0.8); }
+@keyframes floatUp { 0% { opacity: 0; transform: translateY(0) scale(0.8); } 20% { opacity: 1; transform: translateY(-20px) scale(1.1); } 100% { opacity: 0; transform: translateY(-80px) scale(1); } }
 
 /* === DRIVING GAME UI === */
-.car-icon-container {
-    filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5));
-    /* Removed CSS transition so the JS game loop can move it smoothly without lag */
-}
+.car-icon-container { filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5)); }
 
-.game-modal { 
-    display: none; 
-    position: fixed; 
-    top: 0; left: 0; 
-    width: 100vw; height: 100vh; 
-    background: rgba(10, 22, 40, 0.85); 
-    z-index: 10000; 
-    justify-content: center; 
-    align-items: center; 
-    backdrop-filter: blur(8px); 
-}
+.game-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(10, 22, 40, 0.85); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
+.modal-content { background: #1e293b; padding: 40px; border-radius: 15px; text-align: center; border: 2px solid #3b82f6; box-shadow: 0 0 50px rgba(59, 130, 246, 0.3); max-width: 500px; width: 90%; }
+.vehicle-options { display: flex; gap: 20px; justify-content: center; margin-top: 20px; }
+.vehicle-btn { font-size: 24px; padding: 20px 40px; background: #0f172a; border: 2px solid #3b82f6; color: white; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+.vehicle-btn:hover { background: #3b82f6; transform: scale(1.05); }
 
-.modal-content { 
-    background: #1e293b; 
-    padding: 40px; 
-    border-radius: 15px; 
-    text-align: center; 
-    border: 2px solid #3b82f6; 
-    box-shadow: 0 0 50px rgba(59, 130, 246, 0.3); 
-    max-width: 500px; 
-    width: 90%; 
-}
+#driving-hud { display: none; position: fixed; bottom: 20px; left: 20px; background: rgba(15, 23, 42, 0.95); padding: 20px; border-radius: 12px; border: 2px solid #3b82f6; z-index: 5000; box-shadow: 0 4px 20px rgba(0,0,0,0.5); min-width: 250px; }
+.hud-item { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #f8fafc; }
+.hud-item span { color: #10b981; }
 
-.vehicle-options { 
-    display: flex; 
-    gap: 20px; 
-    justify-content: center; 
-    margin-top: 20px; 
-}
-
-.vehicle-btn { 
-    font-size: 24px; 
-    padding: 20px 40px; 
-    background: #0f172a; 
-    border: 2px solid #3b82f6; 
-    color: white; 
-    border-radius: 10px; 
-    cursor: pointer; 
-    transition: all 0.2s; 
-}
-
-.vehicle-btn:hover { 
-    background: #3b82f6; 
-    transform: scale(1.05); 
-}
-
-#driving-hud { 
-    display: none; 
-    position: fixed; 
-    bottom: 20px; 
-    left: 20px; 
-    background: rgba(15, 23, 42, 0.95); 
-    padding: 20px; 
-    border-radius: 12px; 
-    border: 2px solid #3b82f6; 
-    z-index: 5000; 
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5); 
-    min-width: 250px; 
-}
-
-.hud-item { 
-    font-size: 18px; 
-    font-weight: bold; 
-    margin-bottom: 10px; 
-    color: #f8fafc; 
-}
-
-.hud-item span { 
-    color: #10b981; 
-}
-
-/* ==========================================
-   === NEW: NAVIGATION BANNER & ROUTE LINE ===
-   ========================================== */
-
-/* Google Maps Style Green Banner */
+/* === NAVIGATION BANNER (Google Maps Style) === */
 #nav-banner {
-    display: none; /* Hidden by default, JS will set to flex */
-    position: fixed;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #006b52; /* Dark Green */
-    color: white;
-    padding: 15px 25px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    z-index: 5000;
-    min-width: 350px;
-    transition: background 0.3s ease; /* Smoothly turns red on hazard */
+    display: none; position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+    background: #006b52; color: white; padding: 15px 25px; border-radius: 12px;
+    align-items: center; gap: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    z-index: 5000; min-width: 350px; transition: background 0.3s ease;
 }
+.nav-icon { font-size: 32px; background: rgba(255,255,255,0.2); padding: 10px; border-radius: 50%; display: flex; justify-content: center; align-items: center; width: 60px; height: 60px; flex-shrink: 0; }
+.nav-text h3 { margin: 0; font-size: 18px; font-weight: 700; }
+.nav-text p { margin: 0; font-size: 13px; color: #a7f3d0; }
 
-.nav-icon {
-    font-size: 32px;
-    background: rgba(255,255,255,0.2);
-    padding: 10px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 60px;
-    height: 60px;
-    flex-shrink: 0;
-}
+/* === BLUE ROUTE LINE === */
+.route-line { stroke: #3b82f6; stroke-width: 6; stroke-opacity: 0.9; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0px 0px 4px rgba(59, 130, 246, 0.8)); }
 
-.nav-text h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 700;
-}
-
-.nav-text p {
-    margin: 0;
-    font-size: 13px;
-    color: #a7f3d0;
-}
-
-/* Blue Route Line on the Map */
-.route-line {
-    stroke: #3b82f6;
-    stroke-width: 6;
-    stroke-opacity: 0.9;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    filter: drop-shadow(0px 0px 4px rgba(59, 130, 246, 0.8));
+/* === DRIVING IMMERSION VIGNETTE === */
+#driving-vignette {
+    display: none; position: fixed; top: 60px; left: 0;
+    width: calc(100vw - 480px); height: calc(100vh - 60px);
+    pointer-events: none; box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.8); z-index: 450;
 }
