@@ -1,9 +1,9 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-    background: #0a1628;
-    color: #e8eef5;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #000;
+    color: #ffffff;
     display: flex;
     height: 100vh;
     overflow: hidden;
@@ -11,104 +11,148 @@ body {
 
 /* Left: Map area */
 #map-container {
-    flex: 2;
+    flex: 1;
     position: relative;
-    background: url('https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=1200') center/cover;
-    border-right: 3px solid #d4af37;
+    /* Using a nice Chennai city image, but you can swap the URL */
+    background: url('https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=1600') center/cover;
 }
 
-/* Clickable area buttons */
+/* Frosted Glass effect for the dashboard */
+#dashboard {
+    width: 400px;
+    padding: 25px;
+    background: rgba(15, 23, 42, 0.75); /* Deep slate blue, mostly opaque */
+    backdrop-filter: blur(12px); /* This creates the frosted glass look */
+    -webkit-backdrop-filter: blur(12px);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-y: auto;
+    box-shadow: -5px 0 30px rgba(0,0,0,0.5);
+}
+
+/* Map Buttons */
 .area-btn {
     position: absolute;
-    background: rgba(10, 22, 40, 0.85);
-    border: 2px solid #d4af37;
+    background: rgba(15, 23, 42, 0.85);
+    border: 2px solid #ef4444; /* Red for problem */
     color: #fff;
-    padding: 8px 14px;
-    border-radius: 20px;
+    padding: 10px 16px;
+    border-radius: 30px;
     cursor: pointer;
     font-size: 14px;
-    transition: 0.2s;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+    backdrop-filter: blur(4px);
 }
-.area-btn:hover { background: #d4af37; color: #0a1628; transform: scale(1.1); }
 
-/* Position each area on the map */
+.area-btn:hover {
+    transform: scale(1.05) translateY(-2px);
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+}
+
+/* Solved state for map buttons */
+.area-btn.solved {
+    background: rgba(16, 185, 129, 0.9) !important; /* Green */
+    border-color: #10b981 !important;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+}
+
+/* Position each area */
 #btn-Velachery  { top: 65%; left: 35%; }
 #btn-Vadapalani { top: 45%; left: 60%; }
 #btn-Porur      { top: 25%; left: 20%; }
 
-/* Right: Dashboard */
-#dashboard {
-    flex: 1;
-    padding: 20px;
-    background: #0f1f38;
-    overflow-y: auto;
-    border-left: 3px solid #d4af37;
+/* Typography & UI elements */
+h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #f8fafc;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
-h1 { color: #d4af37; font-size: 22px; margin-bottom: 15px; }
-h2 { color: #d4af37; font-size: 16px; margin: 15px 0 8px; }
+h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #94a3b8; /* Light slate */
+    margin: 25px 0 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 5px;
+}
 
 .stat {
     display: flex;
     justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid #1e3555;
+    align-items: center;
+    padding: 12px 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin-bottom: 8px;
     font-size: 14px;
 }
-.stat span:last-child { color: #4ade80; font-weight: bold; }
+
+.stat span:last-child {
+    color: #10b981; /* Bright green for numbers */
+    font-weight: bold;
+    font-size: 16px;
+}
 
 #problem-panel {
-    background: #16273f;
-    padding: 12px;
+    background: rgba(239, 68, 68, 0.15); /* Light red background */
+    padding: 15px;
     border-radius: 8px;
-    margin-top: 10px;
     border-left: 4px solid #ef4444;
+    font-size: 14px;
+    line-height: 1.6;
 }
+
+#problem-panel strong { color: #fca5a5; font-size: 16px; }
 
 textarea {
     width: 100%;
-    height: 70px;
-    background: #0a1628;
-    border: 1px solid #d4af37;
+    height: 80px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: #fff;
-    padding: 8px;
-    border-radius: 6px;
+    padding: 12px;
+    border-radius: 8px;
     margin-top: 8px;
     resize: none;
+    font-family: inherit;
+    transition: border-color 0.3s;
 }
+textarea:focus { outline: none; border-color: #3b82f6; }
 
 button.action {
     width: 100%;
-    margin-top: 8px;
-    padding: 10px;
-    background: #d4af37;
+    margin-top: 12px;
+    padding: 12px;
+    background: #3b82f6; /* Modern bright blue */
     border: none;
-    color: #0a1628;
-    font-weight: bold;
-    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: 8px;
     cursor: pointer;
+    transition: background 0.3s, transform 0.1s;
 }
-button.action:disabled { background: #555; cursor: not-allowed; }
+button.action:hover { background: #2563eb; }
+button.action:active { transform: scale(0.98); }
+button.action:disabled { background: #475569; cursor: not-allowed; opacity: 0.7; }
+
+#approve-btn { background: #10b981; }
+#approve-btn:hover { background: #059669; }
 
 #advisor-response {
-    margin-top: 10px;
-    padding: 10px;
-    background: #16273f;
-    border-radius: 6px;
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(59, 130, 246, 0.15); /* Light blue */
+    border-left: 4px solid #3b82f6;
+    border-radius: 8px;
     font-size: 13px;
-    line-height: 1.5;
+    line-height: 1.6;
     display: none;
-}
-/* Solved state for map buttons */
-.area-btn.solved {
-    background: #10b981 !important; /* Green */
-    border-color: #10b981 !important;
-    color: white !important;
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
-}
-
-/* Red border for unsolved problems */
-.area-btn:not(.solved) {
-    border-color: #ef4444 !important; /* Red */
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
 }
