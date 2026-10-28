@@ -116,6 +116,12 @@ window.onload = function() {
 function saveGame() {
     localStorage.setItem('twinCityState', JSON.stringify(cityState));
 }
+const allSolved = Object.values(cityState.areas).every(a => a.solved);
+    if (allSolved) {
+        setTimeout(() => {
+            alert("🏆 MISSION ACCOMPLISHED!\n\nYou have successfully resolved all major crises in Chennai! The citizens thank you, Mayor.");
+        }, 500);
+    }
 // Quick Propose for the What If Simulator
 function quickPropose(idea) {
     if (!cityState.selectedArea) {
