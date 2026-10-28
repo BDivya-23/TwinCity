@@ -48,6 +48,10 @@
         <h2>Selected Area</h2>
         <div id="problem-panel">Click a location on the map to begin.</div>
         
+        <!-- NEW: Live Simulation Button -->
+        <h2>Live Simulation</h2>
+        <button class="action" onclick="startCarSimulation()" id="sim-btn" style="background: #8b5cf6;">🚗 Simulate Drive in Porur</button>
+
         <h2>What If? Simulator</h2>
         <div style="display:flex; gap:10px; margin-bottom: 10px;">
             <button class="action" style="margin-top:0; background: #3b82f6; color: white !important; font-size: 14px;" onclick="simulateWhatIf('metro')">🚇 Build Metro</button>
@@ -72,6 +76,11 @@
         </div>
 
         <button class="action" id="approve-btn" onclick="approveProposal()" disabled>✅ Approve & Implement</button>
+    </div>
+
+    <!-- NEW: RED ALERT POPUP (Hidden by default, JS turns it on) -->
+    <div id="alert-popup">
+        ⚠️ TRAFFIC ALERT: Severe congestion reported on Porur Bridge!
     </div>
 
     <!-- VICTORY SCREEN OVERLAY -->
