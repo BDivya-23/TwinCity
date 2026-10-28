@@ -13,38 +13,38 @@ body {
 /* Top Bar */
 #top-bar {
     height: 60px;
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(10px);
+    background: #111827;
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0 30px;
-    border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+    border-bottom: 2px solid #3b82f6;
     z-index: 1000;
 }
 
-.logo { font-size: 20px; font-weight: 800; color: #f8fafc; letter-spacing: 1px; }
+.logo { font-size: 20px; font-weight: 800; color: #f8fafc; }
 .badge { background: #3b82f6; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
 
 /* Main Layout */
 #main-layout {
     display: flex;
+    flex-direction: row; /* THIS is what puts map left, dashboard right */
     height: calc(100vh - 60px);
     width: 100vw;
 }
 
-/* Left: Map Area */
+/* Left: Map Area (Takes up remaining space) */
 #map {
-    flex: 1;
+    flex: 2; /* Takes 2/3 of the width */
     height: 100%;
-    background: #1e293b; /* Fallback color while map loads */
+    background: #1e293b;
     z-index: 1;
 }
 
-/* Custom Map Markers (Looks like game buttons) */
+/* Custom Map Markers */
 .map-marker {
     background: rgba(15, 23, 42, 0.9);
-    border: 2px solid #ef4444; /* Red for problem */
+    border: 2px solid #ef4444;
     color: white;
     padding: 8px 12px;
     border-radius: 20px;
@@ -52,57 +52,35 @@ body {
     font-size: 14px;
     text-align: center;
     box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-    transition: all 0.3s;
     cursor: pointer;
     white-space: nowrap;
 }
+.map-marker:hover { transform: scale(1.1); background: #ef4444; }
+.map-marker.solved { border-color: #10b981 !important; box-shadow: 0 0 15px rgba(16, 185, 129, 0.6); }
 
-.map-marker:hover {
-    transform: scale(1.1);
-    background: #ef4444;
-}
-
-.map-marker.solved {
-    border-color: #10b981 !important; /* Green for solved */
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
-}
-
-/* Right: Dashboard */
+/* Right: Dashboard (Fixed width) */
 #dashboard {
-    width: 480px;
+    width: 450px; /* Fixed width for dashboard */
+    height: 100%;
     padding: 25px;
-    background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
-    border-left: 2px solid rgba(59, 130, 246, 0.3);
+    background: #0f172a;
+    border-left: 2px solid #3b82f6;
     overflow-y: auto;
-    box-shadow: -10px 0 30px rgba(0,0,0,0.8);
-    z-index: 5;
 }
 
 h1 { color: #f8fafc; font-size: 24px; margin-bottom: 20px; text-align: center; }
-h2 { color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; margin: 25px 0 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
+h2 { color: #94a3b8; font-size: 12px; text-transform: uppercase; margin: 25px 0 10px; border-bottom: 1px solid #334155; padding-bottom: 5px; }
 
-.stat { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 8px; margin-bottom: 8px; font-size: 14px; }
-.stat span:last-child { color: #10b981; font-weight: bold; font-size: 16px; }
+.stat { display: flex; justify-content: space-between; padding: 12px 15px; background: #1e293b; border-radius: 8px; margin-bottom: 8px; font-size: 14px; }
+.stat span:last-child { color: #10b981; font-weight: bold; }
 
-#problem-panel { background: rgba(239, 68, 68, 0.15); padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444; font-size: 14px; line-height: 1.6; }
+#problem-panel { background: rgba(239, 68, 68, 0.15); padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444; font-size: 14px; }
 #problem-panel strong { color: #fca5a5; font-size: 16px; }
 
-textarea { width: 100%; height: 80px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.2); color: #fff; padding: 12px; border-radius: 8px; margin-top: 8px; resize: none; font-family: inherit; transition: border-color 0.3s; }
-textarea:focus { outline: none; border-color: #3b82f6; }
+textarea { width: 100%; height: 80px; background: #1e293b; border: 1px solid #475569; color: #fff; padding: 12px; border-radius: 8px; margin-top: 8px; resize: none; }
 
-button.action { width: 100%; margin-top: 12px; padding: 12px; background: #3b82f6; border: none; color: white; font-weight: 600; font-size: 14px; border-radius: 8px; cursor: pointer; transition: background 0.3s, transform 0.1s; }
-button.action:hover { background: #2563eb; }
-button.action:active { transform: scale(0.98); }
-button.action:disabled { background: #475569; cursor: not-allowed; opacity: 0.7; }
+button.action { width: 100%; margin-top: 12px; padding: 12px; background: #3b82f6; border: none; color: white; font-weight: 600; border-radius: 8px; cursor: pointer; }
+button.action:disabled { background: #475569; cursor: not-allowed; }
 #approve-btn { background: #10b981; }
-#approve-btn:hover { background: #059669; }
 
-#advisor-response { margin-top: 15px; padding: 15px; background: rgba(59, 130, 246, 0.15); border-left: 4px solid #3b82f6; border-radius: 8px; font-size: 13px; line-height: 1.6; display: none; animation: slide-up 0.3s ease-out; }
-
-@keyframes slide-up {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Hide default Leaflet attribution to look cleaner (Optional, but professional) */
-.leaflet-control-attribution { display: none !important; }
+#advisor-response { margin-top: 15px; padding: 15px; background: rgba(59, 130, 246, 0.15); border-left: 4px solid #3b82f6; border-radius: 8px; display: none; }
