@@ -59,8 +59,31 @@
         <textarea id="proposal-input" placeholder="e.g., Build a new drainage system..."></textarea>
         <button class="action" onclick="evaluateProposal()">🔍 Evaluate Proposal</button>
         
-        <div id="advisor-response"></div>
+        <!-- The AI Advisor Character -->
+        <div id="advisor-container" style="display:none; margin-top: 15px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; gap: 15px; align-items: flex-start;">
+                <!-- The Avatar Image -->
+                <img id="advisor-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=3b82f6" 
+                     style="width: 55px; height: 55px; border-radius: 50%; border: 2px solid #3b82f6; background: #0f172a; flex-shrink: 0;">
+                
+                <!-- The Advice Text -->
+                <div id="advisor-response" style="flex: 1; margin: 0; padding: 0; background: transparent; border: none; font-size: 13px; line-height: 1.6;"></div>
+            </div>
+        </div>
+
         <button class="action" id="approve-btn" onclick="approveProposal()" disabled>✅ Approve & Implement</button>
+    </div>
+
+    <!-- VICTORY SCREEN OVERLAY -->
+    <div id="victory-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(10, 22, 40, 0.95); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(10px);">
+        <div style="background: #1e293b; padding: 40px; border-radius: 15px; text-align: center; border: 2px solid #d4af37; box-shadow: 0 0 50px rgba(212, 175, 55, 0.3); max-width: 500px;">
+            <h1 style="color: #d4af37; font-size: 36px; margin-bottom: 10px;">🏆 MISSION ACCOMPLISHED!</h1>
+            <p style="font-size: 16px; color: #cbd5e1; line-height: 1.6; margin-bottom: 25px;">
+                You have successfully resolved all major crises in Chennai! The traffic is flowing, the floods are gone, and the citizens love you.<br><br>
+                <strong>The city thanks you, Mayor.</strong>
+            </p>
+            <button class="action" style="background: #10b981; font-size: 16px;" onclick="resetGame()">Play Again</button>
+        </div>
     </div>
 
     <!-- SCRIPTS -->
