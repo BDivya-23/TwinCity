@@ -48,9 +48,9 @@
         <h2>Selected Area</h2>
         <div id="problem-panel">Click a location on the map to begin.</div>
         
-        <!-- NEW: Live Simulation Button -->
-        <h2>Live Simulation</h2>
-        <button class="action" onclick="startCarSimulation()" id="sim-btn" style="background: #8b5cf6;">🚗 Simulate Drive in Porur</button>
+        <!-- NEW: Player-Controlled Driving Mode -->
+        <h2>Live Driving Simulation</h2>
+        <button class="action" onclick="openVehicleModal()" id="drive-btn" style="background: #8b5cf6;">🚦 Start Driving Mode</button>
 
         <h2>What If? Simulator</h2>
         <div style="display:flex; gap:10px; margin-bottom: 10px;">
@@ -78,9 +78,37 @@
         <button class="action" id="approve-btn" onclick="approveProposal()" disabled>✅ Approve & Implement</button>
     </div>
 
-    <!-- NEW: RED ALERT POPUP (Hidden by default, JS turns it on) -->
-    <div id="alert-popup">
-        ⚠️ TRAFFIC ALERT: Severe congestion reported on Porur Bridge!
+    <!-- VEHICLE SELECTION MODAL -->
+    <div id="vehicle-modal" class="game-modal">
+        <div class="modal-content">
+            <h2>Select Your Vehicle</h2>
+            <p style="margin-bottom: 20px; color: #cbd5e1;">Choose how you want to navigate the streets.</p>
+            <div class="vehicle-options">
+                <button class="vehicle-btn" onclick="startDriving('bike')">🏍️ Bike</button>
+                <button class="vehicle-btn" onclick="startDriving('car')">🚗 Car</button>
+            </div>
+            <button class="action" style="background: #475569; margin-top: 20px;" onclick="closeModals()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- DRIVING HUD (Shows only when driving) -->
+    <div id="driving-hud">
+        <div class="hud-item">🏆 Score: <span id="score-display">0</span></div>
+        <div class="hud-item">⚡ Speed: <span id="speed-display">0 km/h</span></div>
+        <div class="hud-item" style="font-size: 12px; color: #94a3b8;">Use W,A,S,D or Arrow Keys to drive</div>
+        <button class="action" style="background: #ef4444; margin-top: 10px; padding: 8px;" onclick="stopDriving()">🛑 Stop Driving</button>
+    </div>
+
+    <!-- HAZARD CHALLENGE MODAL -->
+    <div id="hazard-modal" class="game-modal">
+        <div class="modal-content" style="border-color: #ef4444;">
+            <h2 id="hazard-title" style="color: #ef4444;">⚠️ ALERT</h2>
+            <p id="hazard-message" style="margin-bottom: 20px; color: #cbd5e1; font-size: 16px;"></p>
+            <div style="display: flex; gap: 10px;">
+                <button class="action" style="background: #10b981;" onclick="resolveHazard('detour')">🛣️ Detour (+50 pts)</button>
+                <button class="action" style="background: #ef4444;" onclick="resolveHazard('risk')">🚨 Risk It (-20 pts)</button>
+            </div>
+        </div>
     </div>
 
     <!-- VICTORY SCREEN OVERLAY -->
