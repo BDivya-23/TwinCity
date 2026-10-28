@@ -14,10 +14,7 @@
     </header>
 
     <div id="map"></div>
-    
-    <!-- ENHANCEMENT 2: RAIN OVERLAY -->
     <div id="rain-overlay"></div>
-    
     <div id="driving-vignette"></div>
 
     <!-- NAVIGATION BANNER -->
@@ -32,6 +29,13 @@
     <div id="dashboard">
         <h1>🏛️ Mayor Dashboard</h1>
         
+        <!-- NEW: Scrolling News Ticker -->
+        <div class="news-ticker">
+            <div class="ticker-text">
+                🚨 Breaking: Heavy waterlogging reported in Velachery. Traffic at a standstill in Porur. Mayor's approval rating at 85%. We need action!
+            </div>
+        </div>
+
         <h2>City Status</h2>
         <div class="stat">
             <span>💰 Budget</span>
@@ -41,12 +45,24 @@
             <div class="progress-bar" id="budget-bar" style="width: 100%; background: #10b981;"></div>
         </div>
 
-        <div class="stat" style="margin-top: 15px;">
-            <span>😊 Citizen Happiness</span>
-            <span id="happiness">85%</span>
+        <!-- NEW: Happiness with Star Rating -->
+        <div class="stat" style="margin-top: 15px; flex-direction: column; align-items: flex-start;">
+            <div style="display: flex; justify-content: space-between; width: 100%;">
+                <span>😊 Citizen Happiness</span>
+                <span id="happiness">85%</span>
+            </div>
+            <div id="star-rating" style="color: #facc15; font-size: 20px; margin-top: 5px;">⭐⭐⭐⭐☆</div>
         </div>
         <div class="progress-container">
             <div class="progress-bar" id="happiness-bar" style="width: 85%; background: #3b82f6;"></div>
+        </div>
+
+        <!-- NEW: Achievements Badges -->
+        <h2>Achievements</h2>
+        <div id="achievements-container" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+            <div id="badge-velachery" class="badge-locked" title="Fix Velachery Flooding">🌊</div>
+            <div id="badge-vadapalani" class="badge-locked" title="Fix Vadapalani Traffic">🚦</div>
+            <div id="badge-porur" class="badge-locked" title="Fix Porur Traffic">🏗️</div>
         </div>
 
         <h2>Selected Area</h2>
