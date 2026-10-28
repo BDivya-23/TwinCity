@@ -14,16 +14,14 @@
     </header>
 
     <div id="map"></div>
-
-    <!-- Driving Vignette (Dark cinematic edges) -->
     <div id="driving-vignette"></div>
 
-    <!-- NAVIGATION BANNER (Google Maps Style) -->
+    <!-- NAVIGATION BANNER -->
     <div id="nav-banner">
         <div class="nav-icon" id="nav-icon">⬆️</div>
         <div class="nav-text">
-            <h3 id="nav-instruction">Head south on Porur Bypass</h3>
-            <p id="nav-subtext">Then turn left towards Velachery</p>
+            <h3 id="nav-instruction">Free Roam Mode</h3>
+            <p id="nav-subtext">Drive anywhere on the map</p>
         </div>
     </div>
 
@@ -91,10 +89,18 @@
     <div id="driving-hud">
         <div class="hud-item">🏆 Score: <span id="score-display">0</span></div>
         <div class="hud-item">⚡ Speed: <span id="speed-display">0 km/h</span></div>
-        <div class="hud-item" style="font-size: 12px; color: #94a3b8;">Use W,A,S,D or Arrow Keys</div>
-        
-        <button class="action" id="view-toggle-btn" style="background: #3b82f6; margin-top: 10px; padding: 8px;" onclick="toggleView()">🗺️ Switch to Wide Map</button>
+        <div class="hud-item" style="font-size: 12px; color: #94a3b8;">Use W,A,S,D or Arrow Keys to drive</div>
         <button class="action" style="background: #ef4444; margin-top: 5px; padding: 8px;" onclick="stopDriving()">🛑 Stop Driving</button>
+    </div>
+
+    <!-- MOBILE TOUCH CONTROLS -->
+    <div id="touch-controls">
+        <div class="d-pad">
+            <button class="touch-btn up" ontouchstart="handleTouch('ArrowUp', true)" ontouchend="handleTouch('ArrowUp', false)" onmousedown="handleTouch('ArrowUp', true)" onmouseup="handleTouch('ArrowUp', false)">⬆️</button>
+            <button class="touch-btn left" ontouchstart="handleTouch('ArrowLeft', true)" ontouchend="handleTouch('ArrowLeft', false)" onmousedown="handleTouch('ArrowLeft', true)" onmouseup="handleTouch('ArrowLeft', false)">⬅️</button>
+            <button class="touch-btn down" ontouchstart="handleTouch('ArrowDown', true)" ontouchend="handleTouch('ArrowDown', false)" onmousedown="handleTouch('ArrowDown', true)" onmouseup="handleTouch('ArrowDown', false)">⬇️</button>
+            <button class="touch-btn right" ontouchstart="handleTouch('ArrowRight', true)" ontouchend="handleTouch('ArrowRight', false)" onmousedown="handleTouch('ArrowRight', true)" onmouseup="handleTouch('ArrowRight', false)">➡️</button>
+        </div>
     </div>
 
     <!-- HAZARD MODAL -->
