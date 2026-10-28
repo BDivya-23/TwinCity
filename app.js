@@ -19,8 +19,6 @@ const advisorRules = [
 ];
 
 let currentProposal = null;
-
-// === MAP VARIABLES ===
 let map;
 let mapMarkers = {}; 
 
@@ -35,12 +33,7 @@ function selectArea(name) {
     document.getElementById('proposal-input').value = '';
     document.getElementById('advisor-response').style.display = 'none';
     document.getElementById('approve-btn').disabled = true;
-}
-
-// === QUICK PROPOSE ===
-function quickPropose(text) {
-    document.getElementById('proposal-input').value = text;
-    evaluateProposal();
+    document.getElementById('what-if-result').style.display = 'none';
 }
 
 // === EVALUATE PROPOSAL ===
@@ -90,12 +83,10 @@ function approveProposal() {
         return;
     }
 
-    // Deduct Budget & Fix Area
     cityState.budget -= currentProposal.cost;
     area.flood = Math.max(0, area.flood - currentProposal.impact);
     area.solved = true;
     
-    // Happiness Logic
     let happinessBonus = 5; 
     if (currentProposal.keywords.includes('park')) happinessBonus = 15; 
     if (currentProposal.keywords.includes('drain')) happinessBonus = 10; 
@@ -103,7 +94,6 @@ function approveProposal() {
     
     cityState.happiness = Math.min(100, cityState.happiness + happinessBonus);
 
-    // Update UI & Save
     updateDashboard();
     saveGame();
     
@@ -114,28 +104,22 @@ function approveProposal() {
     checkWinCondition(); 
 }
 
-// === UPDATE UI (Text, Progress Bars, and Map) ===
+// === UPDATE UI ===
 function updateDashboard() {
-    // 1. Update Text
     document.getElementById('budget').textContent = `₹${cityState.budget} Cr`;
     document.getElementById('happiness').textContent = `${cityState.happiness}%`;
     
-    // 2. Update Progress Bars
     const budgetPercent = (cityState.budget / 100) * 100;
     document.getElementById('budget-bar').style.width = `${budgetPercent}%`;
-    
-    // Turn budget bar red if money is low
     if (budgetPercent < 30) {
         document.getElementById('budget-bar').style.background = '#ef4444'; 
     }
 
-    const happinessPercent = cityState.happiness;
-    document.getElementById('happiness-bar').style.width = `${happinessPercent}%`;
+    document.getElementById('happiness-bar').style.width = `${cityState.happiness}%`;
 
-    // 3. Update the Map Markers (Turn green if solved)
+    // Update Leaflet Markers
     for (let name in cityState.areas) {
         if (cityState.areas[name].solved && mapMarkers[name]) {
-            // Change the Leaflet marker icon to a green "Solved" state
             mapMarkers[name].setIcon(L.divIcon({
                 className: 'custom-div-icon',
                 html: `<div class='map-marker solved'>✅ ${name} (Solved)</div>`,
@@ -145,7 +129,6 @@ function updateDashboard() {
         }
     }
 
-    // Refresh the selected area panel
     if (cityState.selectedArea) selectArea(cityState.selectedArea);
 }
 
@@ -156,18 +139,18 @@ window.onload = function() {
         Object.assign(cityState, JSON.parse(savedState));
     }
     
-    // Initialize the map first, THEN update the dashboard
     initMap();
     updateDashboard();
     checkWinCondition(); 
+    
+    // Leaflet needs this to resize properly if the page loads slowly
+    setTimeout(() => { map.invalidateSize(); }, 200);
 };
 
-// === SAVE GAME ===
 function saveGame() {
     localStorage.setItem('twinCityState', JSON.stringify(cityState));
 }
 
-// === WIN CONDITION ===
 function checkWinCondition() {
     const allSolved = Object.values(cityState.areas).every(a => a.solved);
     if (allSolved) {
@@ -194,7 +177,6 @@ function simulateWhatIf(type) {
         Traffic Impact: -25 points<br>
         Flood Impact: 0 points<br>
         <em>Budget after: ₹${cityState.budget - 40} Cr</em>`;
-        
         document.getElementById('proposal-input').value = "Build a metro extension";
     } 
     else if (type === 'drainage') {
@@ -204,34 +186,25 @@ function simulateWhatIf(type) {
         Flood Impact: -30 points (${floodReduction})<br>
         Traffic Impact: 0 points<br>
         <em>Budget after: ₹${cityState.budget - 20} Cr</em>`;
-        
         document.getElementById('proposal-input').value = "Build a new drainage system";
     }
-    
     evaluateProposal(); 
 }
 
-// ==========================================
-// ===== REAL INTERACTIVE MAP SETUP =========
-// ==========================================
+// === REAL INTERACTIVE MAP SETUP ===
 function initMap() {
-    // 1. Initialize map centered on Chennai
     map = L.map('map').setView([13.0500, 80.2100], 11);
 
-    // 2. Add Free Map layer (This fixes the API Key watermark)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 19
     }).addTo(map);
 
-    // 3. Define locations
     const locations = [
         { name: 'Velachery', coords: [12.9750, 80.2210] },
         { name: 'Vadapalani', coords: [13.0503, 80.2121] },
         { name: 'Porur', coords: [13.0358, 80.1568] }
     ];
 
-    // 4. Add Markers to Map
     locations.forEach(loc => {
         const customIcon = L.divIcon({
             className: 'custom-div-icon',
@@ -241,11 +214,8 @@ function initMap() {
         });
 
         const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
-        
-        // Save marker reference so updateDashboard can find it
         mapMarkers[loc.name] = marker;
 
-        // Click event on marker
         marker.on('click', function() {
             selectArea(loc.name); 
         });
