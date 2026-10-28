@@ -8,7 +8,7 @@ const cityState = {
     }
 };
 
-// MOVED THIS OUTSIDE initMap SO DRIVING MODE CAN ACCESS IT
+// Locations accessible for spawning the vehicle
 const locations = [ 
     { name: 'Velachery', coords: [12.9750, 80.2210] }, 
     { name: 'Vadapalani', coords: [13.0503, 80.2121] }, 
@@ -28,7 +28,7 @@ let mapMarkers = {};
 
 // === GAME ENGINE STATE ===
 let gameState = {
-    isDriving: false, isPaused: false,
+    isDriving: false, isPaused: false, isWideView: false,
     vehicleType: 'car',
     lat: 13.0358, lng: 80.1568,
     speed: 0,           
@@ -153,7 +153,7 @@ function initMap() {
 }
 
 // ==========================================
-// === MANUAL DRIVING PHYSICS ENGINE ===
+// === IMMERSIVE DRIVING ENGINE ===
 // ==========================================
 
 function openVehicleModal() { document.getElementById('vehicle-modal').style.display = 'flex'; }
@@ -166,38 +166,39 @@ function startDriving(type) {
     closeModals();
     gameState.isDriving = true;
     gameState.isPaused = false;
+    gameState.isWideView = false;
     gameState.vehicleType = type;
     gameState.speed = 0;
     gameState.heading = 0;
     gameState.score = 0;
     hazards.forEach(h => h.triggered = false);
 
-    // --- SPAWN AT SELECTED AREA OR DEFAULT TO PORUR ---
+    // Spawn exactly where the user selected, or default to Porur
     let spawnLat = 13.0358;
     let spawnLng = 80.1568;
-    
     if (cityState.selectedArea) {
         const loc = locations.find(l => l.name === cityState.selectedArea);
         if (loc) { spawnLat = loc.coords[0]; spawnLng = loc.coords[1]; }
     }
-    
     gameState.lat = spawnLat;
     gameState.lng = spawnLng;
 
+    // Show UI Elements
     document.getElementById('driving-hud').style.display = 'block';
     document.getElementById('nav-banner').style.display = 'flex';
     document.getElementById('driving-vignette').style.display = 'block'; 
     document.getElementById('drive-btn').innerText = "🛑 Stop Driving";
     document.getElementById('drive-btn').style.background = "#ef4444";
     document.getElementById('score-display').innerText = gameState.score;
+    document.getElementById('view-toggle-btn').innerText = "🗺️ Switch to Wide Map";
 
-    // Camera setup
+    // Immersive Camera Zoom
     map.dragging.disable();
-    map.setView([gameState.lat, gameState.lng], 17); 
+    map.setView([gameState.lat, gameState.lng], 18); 
 
     const vehicleEmoji = type === 'bike' ? '🏍️' : '🚗';
     
-    // HIGHLY VISIBLE MARKER
+    // High-visibility marker with blue border and white background
     const vehicleIcon = L.divIcon({ 
         className: 'car-icon-container', 
         html: `<div id="car-emoji" style="font-size: 26px; background: white; border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border: 3px solid #3b82f6; box-shadow: 0 4px 15px rgba(0,0,0,0.6); transition: transform 0.1s linear;">${vehicleEmoji}</div>`, 
@@ -223,7 +224,26 @@ function stopDriving() {
     map.setView([13.0500, 80.2100], 12); 
 }
 
-// Keyboard Controls (Bound to Window to ensure focus)
+function toggleView() {
+    gameState.isWideView = !gameState.isWideView;
+    const btn = document.getElementById('view-toggle-btn');
+    
+    if (gameState.isWideView) {
+        map.dragging.enable();
+        map.flyTo([gameState.lat, gameState.lng], 13, { duration: 1.5 });
+        document.getElementById('driving-vignette').style.display = 'none';
+        btn.innerText = "🚗 Switch to Driving View";
+        btn.style.background = "#10b981";
+    } else {
+        map.dragging.disable();
+        map.flyTo([gameState.lat, gameState.lng], 18, { duration: 1.5 });
+        document.getElementById('driving-vignette').style.display = 'block';
+        btn.innerText = "🗺️ Switch to Wide Map";
+        btn.style.background = "#3b82f6";
+    }
+}
+
+// Keyboard Controls
 window.addEventListener('keydown', (e) => {
     if (!gameState.isDriving || gameState.isPaused) return;
     let key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
@@ -281,6 +301,7 @@ function gameLoop() {
 
         gameState.vehicleMarker.setLatLng([gameState.lat, gameState.lng]);
         
+        // Rotate Emoji and add Lean
         const emojiDiv = document.getElementById('car-emoji');
         if(emojiDiv) {
             let lean = 0;
@@ -289,7 +310,11 @@ function gameLoop() {
             emojiDiv.style.transform = `rotate(${gameState.heading + Math.PI/2}rad) rotate(${lean}deg)`;
         }
 
-        map.setView([gameState.lat, gameState.lng], map.getZoom(), { animate: false });
+        // Camera follows vehicle (if not in Wide View)
+        if (!gameState.isWideView) {
+            map.setView([gameState.lat, gameState.lng], map.getZoom(), { animate: false });
+        }
+        
         checkHazards(gameState.lat, gameState.lng);
     }
 
