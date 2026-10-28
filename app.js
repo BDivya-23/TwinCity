@@ -108,20 +108,25 @@ function approveProposal() {
 
 // === UPDATE UI ===
 function updateDashboard() {
+    // Update Text
     document.getElementById('budget').textContent = `₹${cityState.budget} Cr`;
     document.getElementById('happiness').textContent = `${cityState.happiness}%`;
     
-    // Update the REAL MAP visuals instead of old HTML buttons
+    // Update Progress Bars
+    const budgetPercent = (cityState.budget / 100) * 100;
+    document.getElementById('budget-bar').style.width = `${budgetPercent}%`;
+    if (budgetPercent < 30) document.getElementById('budget-bar').style.background = '#ef4444'; // Turns red if broke
+    
+    document.getElementById('happiness-bar').style.width = `${cityState.happiness}%`;
+
+    // Update the map visuals
     for (let name in cityState.areas) {
-        const marker = mapMarkers[name];
-        if (marker && cityState.areas[name].solved) {
-            // Change the marker to Green
-            marker.setIcon(L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div class='map-marker solved'>✅ ${name} (Solved)</div>`,
-                iconSize: [150, 30],
-                iconAnchor: [75, 15]
-            }));
+        const btn = document.getElementById(`btn-${name}`);
+        if (btn) {
+            if (cityState.areas[name].solved) {
+                btn.classList.add('solved');
+                btn.innerHTML = `✅ ${name} (Solved)`;
+            }
         }
     }
 
