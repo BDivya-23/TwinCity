@@ -1,0 +1,101 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #0a1628;
+    color: #e8eef5;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Left: Map area */
+#map-container {
+    flex: 2;
+    position: relative;
+    background: url('https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=1200') center/cover;
+    border-right: 3px solid #d4af37;
+}
+
+/* Clickable area buttons */
+.area-btn {
+    position: absolute;
+    background: rgba(10, 22, 40, 0.85);
+    border: 2px solid #d4af37;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+}
+.area-btn:hover { background: #d4af37; color: #0a1628; transform: scale(1.1); }
+
+/* Position each area on the map */
+#velachery    { top: 60%; left: 45%; }
+#vadapalani   { top: 30%; left: 50%; }
+#porur        { top: 25%; left: 25%; }
+
+/* Right: Dashboard */
+#dashboard {
+    flex: 1;
+    padding: 20px;
+    background: #0f1f38;
+    overflow-y: auto;
+    border-left: 3px solid #d4af37;
+}
+
+h1 { color: #d4af37; font-size: 22px; margin-bottom: 15px; }
+h2 { color: #d4af37; font-size: 16px; margin: 15px 0 8px; }
+
+.stat {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #1e3555;
+    font-size: 14px;
+}
+.stat span:last-child { color: #4ade80; font-weight: bold; }
+
+#problem-panel {
+    background: #16273f;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 10px;
+    border-left: 4px solid #ef4444;
+}
+
+textarea {
+    width: 100%;
+    height: 70px;
+    background: #0a1628;
+    border: 1px solid #d4af37;
+    color: #fff;
+    padding: 8px;
+    border-radius: 6px;
+    margin-top: 8px;
+    resize: none;
+}
+
+button.action {
+    width: 100%;
+    margin-top: 8px;
+    padding: 10px;
+    background: #d4af37;
+    border: none;
+    color: #0a1628;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+}
+button.action:disabled { background: #555; cursor: not-allowed; }
+
+#advisor-response {
+    margin-top: 10px;
+    padding: 10px;
+    background: #16273f;
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.5;
+    display: none;
+}
