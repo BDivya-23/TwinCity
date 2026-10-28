@@ -3,31 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <title>TwinCity: Digital Chennai</title>
-    
-    <!-- 1. Load the Leaflet Map Library -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <!-- 2. Your Styles -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- HEADER -->
     <header id="top-bar">
         <div class="logo">🏙️ TwinCity: Digital Chennai</div>
         <div class="badge">AI-Powered Digital Twin</div>
     </header>
 
-    <!-- MAP -->
     <div id="map"></div>
 
-    <!-- DASHBOARD -->
+    <!-- NAVIGATION BANNER (Hidden by default) -->
+    <div id="nav-banner">
+        <div class="nav-icon" id="nav-icon">⬆️</div>
+        <div class="nav-text">
+            <h3 id="nav-instruction">Head south on Porur Bypass</h3>
+            <p id="nav-subtext">Then turn left towards Velachery</p>
+        </div>
+    </div>
+
     <div id="dashboard">
         <h1>🏛️ Mayor Dashboard</h1>
         
         <h2>City Status</h2>
-        
-        <!-- Budget Stat & Bar -->
         <div class="stat">
             <span>💰 Budget</span>
             <span id="budget">₹100 Cr</span>
@@ -36,7 +36,6 @@
             <div class="progress-bar" id="budget-bar" style="width: 100%; background: #10b981;"></div>
         </div>
 
-        <!-- Happiness Stat & Bar -->
         <div class="stat" style="margin-top: 15px;">
             <span>😊 Citizen Happiness</span>
             <span id="happiness">85%</span>
@@ -48,7 +47,6 @@
         <h2>Selected Area</h2>
         <div id="problem-panel">Click a location on the map to begin.</div>
         
-        <!-- NEW: Player-Controlled Driving Mode -->
         <h2>Live Driving Simulation</h2>
         <button class="action" onclick="openVehicleModal()" id="drive-btn" style="background: #8b5cf6;">🚦 Start Driving Mode</button>
 
@@ -63,14 +61,9 @@
         <textarea id="proposal-input" placeholder="e.g., Build a new drainage system..."></textarea>
         <button class="action" onclick="evaluateProposal()">🔍 Evaluate Proposal</button>
         
-        <!-- The AI Advisor Character -->
         <div id="advisor-container" style="display:none; margin-top: 15px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
             <div style="display: flex; gap: 15px; align-items: flex-start;">
-                <!-- The Avatar Image -->
-                <img id="advisor-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=3b82f6" 
-                     style="width: 55px; height: 55px; border-radius: 50%; border: 2px solid #3b82f6; background: #0f172a; flex-shrink: 0;">
-                
-                <!-- The Advice Text -->
+                <img id="advisor-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=3b82f6" style="width: 55px; height: 55px; border-radius: 50%; border: 2px solid #3b82f6; background: #0f172a; flex-shrink: 0;">
                 <div id="advisor-response" style="flex: 1; margin: 0; padding: 0; background: transparent; border: none; font-size: 13px; line-height: 1.6;"></div>
             </div>
         </div>
@@ -78,7 +71,7 @@
         <button class="action" id="approve-btn" onclick="approveProposal()" disabled>✅ Approve & Implement</button>
     </div>
 
-    <!-- VEHICLE SELECTION MODAL -->
+    <!-- VEHICLE MODAL -->
     <div id="vehicle-modal" class="game-modal">
         <div class="modal-content">
             <h2>Select Your Vehicle</h2>
@@ -91,39 +84,35 @@
         </div>
     </div>
 
-    <!-- DRIVING HUD (Shows only when driving) -->
+    <!-- DRIVING HUD -->
     <div id="driving-hud">
         <div class="hud-item">🏆 Score: <span id="score-display">0</span></div>
         <div class="hud-item">⚡ Speed: <span id="speed-display">0 km/h</span></div>
-        <div class="hud-item" style="font-size: 12px; color: #94a3b8;">Use W,A,S,D or Arrow Keys to drive</div>
+        <div class="hud-item" style="font-size: 12px; color: #94a3b8;">Press W to Accelerate, S to Brake</div>
         <button class="action" style="background: #ef4444; margin-top: 10px; padding: 8px;" onclick="stopDriving()">🛑 Stop Driving</button>
     </div>
 
-    <!-- HAZARD CHALLENGE MODAL -->
+    <!-- HAZARD MODAL -->
     <div id="hazard-modal" class="game-modal">
         <div class="modal-content" style="border-color: #ef4444;">
             <h2 id="hazard-title" style="color: #ef4444;">⚠️ ALERT</h2>
             <p id="hazard-message" style="margin-bottom: 20px; color: #cbd5e1; font-size: 16px;"></p>
             <div style="display: flex; gap: 10px;">
-                <button class="action" style="background: #10b981;" onclick="resolveHazard('detour')">🛣️ Detour (+50 pts)</button>
+                <button class="action" style="background: #10b981;" onclick="resolveHazard('detour')">🛣️ Take Detour (+50 pts)</button>
                 <button class="action" style="background: #ef4444;" onclick="resolveHazard('risk')">🚨 Risk It (-20 pts)</button>
             </div>
         </div>
     </div>
 
-    <!-- VICTORY SCREEN OVERLAY -->
+    <!-- VICTORY SCREEN -->
     <div id="victory-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(10, 22, 40, 0.95); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(10px);">
         <div style="background: #1e293b; padding: 40px; border-radius: 15px; text-align: center; border: 2px solid #d4af37; box-shadow: 0 0 50px rgba(212, 175, 55, 0.3); max-width: 500px;">
             <h1 style="color: #d4af37; font-size: 36px; margin-bottom: 10px;">🏆 MISSION ACCOMPLISHED!</h1>
-            <p style="font-size: 16px; color: #cbd5e1; line-height: 1.6; margin-bottom: 25px;">
-                You have successfully resolved all major crises in Chennai! The traffic is flowing, the floods are gone, and the citizens love you.<br><br>
-                <strong>The city thanks you, Mayor.</strong>
-            </p>
+            <p style="font-size: 16px; color: #cbd5e1; line-height: 1.6; margin-bottom: 25px;">You have successfully resolved all major crises in Chennai!</p>
             <button class="action" style="background: #10b981; font-size: 16px;" onclick="resetGame()">Play Again</button>
         </div>
     </div>
 
-    <!-- SCRIPTS -->
     <script src="app.js"></script>
 </body>
 </html>
