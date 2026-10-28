@@ -104,3 +104,12 @@ window.onload = function() {
 function saveGame() {
     localStorage.setItem('twinCityState', JSON.stringify(cityState));
 }
+// Quick Propose for the What If Simulator
+function quickPropose(idea) {
+    if (!cityState.selectedArea) {
+        alert("Please select an area on the map first!");
+        return;
+    }
+    document.getElementById('proposal-input').value = idea;
+    evaluateProposal(); // Automatically runs the advisor
+}
