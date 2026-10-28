@@ -76,7 +76,7 @@ button.action:disabled { background: #475569; cursor: not-allowed; opacity: 0.7;
 @keyframes floatUp { 0% { opacity: 0; transform: translateY(0) scale(0.8); } 20% { opacity: 1; transform: translateY(-20px) scale(1.1); } 100% { opacity: 0; transform: translateY(-80px) scale(1); } }
 
 /* === DRIVING GAME UI === */
-.car-icon-container { filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5)); }
+.car-icon-container { filter: drop-shadow(0px 4px 10px rgba(0,0,0,0.6)); }
 
 .game-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(10, 22, 40, 0.85); z-index: 10000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
 .modal-content { background: #1e293b; padding: 40px; border-radius: 15px; text-align: center; border: 2px solid #3b82f6; box-shadow: 0 0 50px rgba(59, 130, 246, 0.3); max-width: 500px; width: 90%; }
@@ -107,34 +107,9 @@ button.action:disabled { background: #475569; cursor: not-allowed; opacity: 0.7;
 }
 
 /* === MOBILE TOUCH CONTROLS === */
-#touch-controls {
-    display: none;
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 6000;
-}
-
-.d-pad {
-    display: grid;
-    grid-template-columns: 60px 60px 60px;
-    grid-template-rows: 60px 60px;
-    gap: 5px;
-}
-
-.touch-btn {
-    background: rgba(15, 23, 42, 0.8);
-    border: 2px solid #3b82f6;
-    color: white;
-    font-size: 24px;
-    border-radius: 10px;
-    cursor: pointer;
-    user-select: none;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
+#touch-controls { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 6000; }
+.d-pad { display: grid; grid-template-columns: 60px 60px 60px; grid-template-rows: 60px 60px; gap: 5px; }
+.touch-btn { background: rgba(15, 23, 42, 0.8); border: 2px solid #3b82f6; color: white; font-size: 24px; border-radius: 10px; cursor: pointer; user-select: none; display: flex; justify-content: center; align-items: center; }
 .touch-btn:active { background: #3b82f6; }
 .up { grid-column: 2; grid-row: 1; }
 .left { grid-column: 1; grid-row: 2; }
