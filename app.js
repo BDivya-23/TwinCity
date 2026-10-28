@@ -67,14 +67,26 @@ function approveProposal() {
     const area = cityState.areas[cityState.selectedArea];
 
     if (cityState.budget < currentProposal.cost) {
-        alert("Insufficient budget!");
+        // Visual warning instead of a boring alert
+        const responseBox = document.getElementById('advisor-response');
+        responseBox.innerHTML = `<span style="color:#ef4444; font-weight:bold;">❌ INSUFFICIENT FUNDS!</span><br>
+        This solution costs ₹${currentProposal.cost} Cr, but you only have ₹${cityState.budget} Cr left.<br>
+        <em>The city council has rejected your proposal.</em>`;
         return;
     }
 
     cityState.budget -= currentProposal.cost;
+
     area.flood = Math.max(0, area.flood - currentProposal.impact);
     area.solved = true;
-    cityState.happiness = Math.min(100, cityState.happiness + 5);
+    
+    // Smarter Happiness Logic
+    let happinessBonus = 5; // Default
+    if (currentProposal.keywords.includes('park')) happinessBonus = 15; // Parks make people very happy
+    if (currentProposal.keywords.includes('drain')) happinessBonus = 10; // Fixing floods makes people happy
+    if (currentProposal.keywords.includes('metro')) happinessBonus = 5;  // Metro is good but construction is annoying
+    
+    cityState.happiness = Math.min(100, cityState.happiness + happinessBonus);
 
     updateDashboard();
     saveGame();
@@ -123,11 +135,36 @@ const allSolved = Object.values(cityState.areas).every(a => a.solved);
         }, 500);
     }
 // Quick Propose for the What If Simulator
-function quickPropose(idea) {
+// Quick Propose for the What If Simulator
+function simulateWhatIf(type) {
     if (!cityState.selectedArea) {
         alert("Please select an area on the map first!");
         return;
     }
-    document.getElementById('proposal-input').value = idea;
-    evaluateProposal(); // Automatically runs the advisor
+    
+    const area = cityState.areas[cityState.selectedArea];
+    const resultBox = document.getElementById('what-if-result');
+    resultBox.style.display = 'block';
+
+    if (type === 'metro') {
+        resultBox.innerHTML = `<strong>🚇 Metro Extension</strong><br>
+        Cost: ₹40 Cr<br>
+        Traffic Impact: -25 points<br>
+        Flood Impact: 0 points<br>
+        <em>Budget after: ₹${cityState.budget - 40} Cr</em>`;
+        
+        document.getElementById('proposal-input').value = "Build a metro extension";
+    } 
+    else if (type === 'drainage') {
+        const floodReduction = area.flood > 50 ? "High" : "Medium";
+        resultBox.innerHTML = `<strong>🌊 Drainage System</strong><br>
+        Cost: ₹20 Cr<br>
+        Flood Impact: -30 points (${floodReduction})<br>
+        Traffic Impact: 0 points<br>
+        <em>Budget after: ₹${cityState.budget - 20} Cr</em>`;
+        
+        document.getElementById('proposal-input').value = "Build a new drainage system";
+    }
+    
+    evaluateProposal(); // Automatically runs the AI advisor
 }
