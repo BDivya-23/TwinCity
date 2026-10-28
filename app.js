@@ -21,6 +21,8 @@ const advisorRules = [
 let currentProposal = null;
 let map;
 let mapMarkers = {}; 
+let carMarker = null;
+let carInterval = null;
 
 // === SELECT AREA ===
 function selectArea(name) {
@@ -31,12 +33,14 @@ function selectArea(name) {
          Flood Severity: ${area.flood}/100<br>
          Traffic: ${area.traffic}/100`;
     document.getElementById('proposal-input').value = '';
-    document.getElementById('advisor-response').style.display = 'none';
-    document.getElementById('approve-btn').disabled = true;
+    
+    // Hide panels when switching areas
+    document.getElementById('advisor-container').style.display = 'none';
     document.getElementById('what-if-result').style.display = 'none';
+    document.getElementById('approve-btn').disabled = true;
 }
 
-// === EVALUATE PROPOSAL ===
+// === EVALUATE PROPOSAL (With Avatar Logic) ===
 function evaluateProposal() {
     const text = document.getElementById('proposal-input').value.toLowerCase();
     
@@ -53,6 +57,10 @@ function evaluateProposal() {
     }
 
     const box = document.getElementById('advisor-response');
+    const container = document.getElementById('advisor-container');
+    const avatar = document.getElementById('advisor-avatar');
+    
+    container.style.display = 'block';
     box.style.display = 'block';
 
     if (matched && !area.solved) {
@@ -60,17 +68,29 @@ function evaluateProposal() {
         box.innerHTML = `<span style="color:#4ade80">✅ Recommended</span><br>${matched.text}<br>
             <em>Reason: recognized keyword matching proposal.</em>`;
         document.getElementById('approve-btn').disabled = false;
+        
+        // AI is happy (Green)
+        avatar.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=10b981"; 
+        avatar.style.borderColor = "#10b981";
     } else if (area.solved) {
         box.innerHTML = `<span style="color:#ef4444">⚠️ Already solved.</span>`;
         document.getElementById('approve-btn').disabled = true;
+        
+        // AI is angry (Red)
+        avatar.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=ef4444"; 
+        avatar.style.borderColor = "#ef4444";
     } else {
         currentProposal = null;
         box.innerHTML = `<span style="color:#facc15">🤔 Unrecognized idea.</span> Try words like "drainage", "metro", "park", or "road".`;
         document.getElementById('approve-btn').disabled = true;
+        
+        // AI is confused (Yellow)
+        avatar.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=facc15"; 
+        avatar.style.borderColor = "#facc15";
     }
 }
 
-// === APPROVE & SIMULATE ===
+// === APPROVE & SIMULATE (With Floating Text) ===
 function approveProposal() {
     if (!currentProposal) return;
     const area = cityState.areas[cityState.selectedArea];
@@ -93,6 +113,10 @@ function approveProposal() {
     if (currentProposal.keywords.includes('metro')) happinessBonus = 5;  
     
     cityState.happiness = Math.min(100, cityState.happiness + happinessBonus);
+
+    // Trigger Floating Text
+    showFloatingText(`-₹${currentProposal.cost} Cr`, '#ef4444');
+    showFloatingText(`+${happinessBonus}% Happiness`, '#10b981');
 
     updateDashboard();
     saveGame();
@@ -117,7 +141,6 @@ function updateDashboard() {
 
     document.getElementById('happiness-bar').style.width = `${cityState.happiness}%`;
 
-    // Update Leaflet Markers
     for (let name in cityState.areas) {
         if (cityState.areas[name].solved && mapMarkers[name]) {
             mapMarkers[name].setIcon(L.divIcon({
@@ -128,7 +151,6 @@ function updateDashboard() {
             }));
         }
     }
-
     if (cityState.selectedArea) selectArea(cityState.selectedArea);
 }
 
@@ -142,8 +164,6 @@ window.onload = function() {
     initMap();
     updateDashboard();
     checkWinCondition(); 
-    
-    // Leaflet needs this to resize properly if the page loads slowly
     setTimeout(() => { map.invalidateSize(); }, 200);
 };
 
@@ -151,13 +171,31 @@ function saveGame() {
     localStorage.setItem('twinCityState', JSON.stringify(cityState));
 }
 
+// === WIN CONDITION & VICTORY SCREEN ===
 function checkWinCondition() {
     const allSolved = Object.values(cityState.areas).every(a => a.solved);
     if (allSolved) {
         setTimeout(() => {
-            alert("🏆 MISSION ACCOMPLISHED!\n\nYou have successfully resolved all major crises in Chennai! The citizens thank you, Mayor.");
-        }, 500);
+            document.getElementById('victory-screen').style.display = 'flex';
+        }, 1000);
     }
+}
+
+function resetGame() {
+    localStorage.removeItem('twinCityState');
+    location.reload();
+}
+
+// === FLOATING TEXT ANIMATION ===
+function showFloatingText(text, color) {
+    const el = document.createElement('div');
+    el.className = 'floating-text';
+    el.textContent = text;
+    el.style.color = color;
+    el.style.left = '60%'; 
+    el.style.top = '40%';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1500); 
 }
 
 // === WHAT IF SIMULATOR ===
@@ -173,18 +211,14 @@ function simulateWhatIf(type) {
 
     if (type === 'metro') {
         resultBox.innerHTML = `<strong>🚇 Metro Extension</strong><br>
-        Cost: ₹40 Cr<br>
-        Traffic Impact: -25 points<br>
-        Flood Impact: 0 points<br>
+        Cost: ₹40 Cr<br>Traffic Impact: -25 points<br>Flood Impact: 0 points<br>
         <em>Budget after: ₹${cityState.budget - 40} Cr</em>`;
         document.getElementById('proposal-input').value = "Build a metro extension";
     } 
     else if (type === 'drainage') {
         const floodReduction = area.flood > 50 ? "High" : "Medium";
         resultBox.innerHTML = `<strong>🌊 Drainage System</strong><br>
-        Cost: ₹20 Cr<br>
-        Flood Impact: -30 points (${floodReduction})<br>
-        Traffic Impact: 0 points<br>
+        Cost: ₹20 Cr<br>Flood Impact: -30 points (${floodReduction})<br>Traffic Impact: 0 points<br>
         <em>Budget after: ₹${cityState.budget - 20} Cr</em>`;
         document.getElementById('proposal-input').value = "Build a new drainage system";
     }
@@ -193,7 +227,7 @@ function simulateWhatIf(type) {
 
 // === REAL INTERACTIVE MAP SETUP ===
 function initMap() {
-    map = L.map('map').setView([13.0500, 80.2100], 11);
+    map = L.map('map').setView([13.0500, 80.2100], 12);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19
@@ -220,4 +254,54 @@ function initMap() {
             selectArea(loc.name); 
         });
     });
+}
+
+// === LIVE CAR SIMULATION ===
+function startCarSimulation() {
+    if (carInterval) clearInterval(carInterval);
+    if (carMarker) map.removeLayer(carMarker);
+
+    const route = [
+        [13.0358, 80.1568], 
+        [13.0365, 80.1585], 
+        [13.0380, 80.1590], 
+        [13.0395, 80.1575], 
+        [13.0380, 80.1550],
+        [13.0358, 80.1568]
+    ];
+
+    let step = 0;
+    const carIcon = L.divIcon({ className: 'car-icon-container', html: '<div>🚗</div>', iconSize: [30, 30], iconAnchor: [15, 15] });
+    
+    carMarker = L.marker(route[0], { icon: carIcon }).addTo(map);
+    map.setView(route[0], 15); // Zoom in to see the car
+
+    const btn = document.getElementById('sim-btn');
+    btn.disabled = true;
+    btn.innerText = "🚗 Vehicle in transit...";
+
+    carInterval = setInterval(() => {
+        step++;
+        if (step >= route.length) {
+            clearInterval(carInterval);
+            map.removeLayer(carMarker);
+            btn.disabled = false;
+            btn.innerText = "🚗 Simulate Drive in Porur";
+            return;
+        }
+        carMarker.setLatLng(route[step]);
+
+        if (step === 2) { showTrafficAlert(); }
+    }, 1500); 
+}
+
+function showTrafficAlert() {
+    const alertBox = document.getElementById('alert-popup');
+    alertBox.style.display = 'block';
+    alertBox.classList.add('pulse-alert');
+    
+    setTimeout(() => {
+        alertBox.style.display = 'none';
+        alertBox.classList.remove('pulse-alert');
+    }, 4000);
 }
