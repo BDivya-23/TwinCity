@@ -260,38 +260,79 @@ button.action:disabled { background: #475569; cursor: not-allowed; opacity: 0.7;
     100% { opacity: 0; transform: translateY(-80px) scale(1); }
 }
 
-/* === LIVE VEHICLE SIMULATION === */
+/* === DRIVING GAME UI === */
 .car-icon-container {
-    font-size: 24px;
     filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5));
-    transition: all 1s linear; 
+    /* Removed CSS transition so the JS game loop can move it smoothly without lag */
 }
 
-#alert-popup {
+.game-modal { 
     display: none; 
-    position: fixed;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #ef4444;
-    color: white;
-    padding: 15px 30px;
-    border-radius: 8px;
-    font-weight: 800;
-    font-size: 18px;
-    box-shadow: 0 0 30px rgba(239, 68, 68, 0.8);
-    z-index: 10000;
-    border: 2px solid #fff;
-    text-align: center;
-    letter-spacing: 1px;
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100vw; height: 100vh; 
+    background: rgba(10, 22, 40, 0.85); 
+    z-index: 10000; 
+    justify-content: center; 
+    align-items: center; 
+    backdrop-filter: blur(8px); 
 }
 
-.pulse-alert {
-    animation: alert-pulse 1s infinite;
+.modal-content { 
+    background: #1e293b; 
+    padding: 40px; 
+    border-radius: 15px; 
+    text-align: center; 
+    border: 2px solid #3b82f6; 
+    box-shadow: 0 0 50px rgba(59, 130, 246, 0.3); 
+    max-width: 500px; 
+    width: 90%; 
 }
 
-@keyframes alert-pulse {
-    0% { transform: translateX(-50%) scale(1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
-    50% { transform: translateX(-50%) scale(1.05); box-shadow: 0 0 40px rgba(239, 68, 68, 1); }
-    100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
+.vehicle-options { 
+    display: flex; 
+    gap: 20px; 
+    justify-content: center; 
+    margin-top: 20px; 
+}
+
+.vehicle-btn { 
+    font-size: 24px; 
+    padding: 20px 40px; 
+    background: #0f172a; 
+    border: 2px solid #3b82f6; 
+    color: white; 
+    border-radius: 10px; 
+    cursor: pointer; 
+    transition: all 0.2s; 
+}
+
+.vehicle-btn:hover { 
+    background: #3b82f6; 
+    transform: scale(1.05); 
+}
+
+#driving-hud { 
+    display: none; 
+    position: fixed; 
+    bottom: 20px; 
+    left: 20px; 
+    background: rgba(15, 23, 42, 0.95); 
+    padding: 20px; 
+    border-radius: 12px; 
+    border: 2px solid #3b82f6; 
+    z-index: 5000; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5); 
+    min-width: 250px; 
+}
+
+.hud-item { 
+    font-size: 18px; 
+    font-weight: bold; 
+    margin-bottom: 10px; 
+    color: #f8fafc; 
+}
+
+.hud-item span { 
+    color: #10b981; 
 }
