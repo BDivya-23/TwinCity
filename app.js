@@ -18,36 +18,28 @@ const advisorRules = [
 let currentProposal = null;
 let map;
 let mapMarkers = {}; 
+let routeLine = null;
 
-// === DRIVING GAME STATE & PHYSICS ===
+// === GAME ENGINE STATE & PHYSICS ===
 let gameState = {
-    isDriving: false,
-    isPaused: false,
+    isDriving: false, isPaused: false, isWideView: false,
     vehicleType: 'car',
-    lat: 13.0358, // Start at Porur
-    lng: 80.1568,
-    speed: 0,           // Current speed
-    maxSpeed: 0.002,    // Top speed
-    maxReverse: -0.001, // Reverse speed limit
-    acceleration: 0.00005,
-    braking: 0.0001,
-    friction: 0.00002,
-    heading: 0,         // Direction in radians (0 = North)
-    turnSpeed: 0.04,    // How fast the vehicle turns
-    score: 0,
-    vehicleMarker: null
+    lat: 13.0358, lng: 80.1568,
+    speed: 0, maxSpeed: 0.002, maxReverse: -0.001,
+    acceleration: 0.00005, braking: 0.0001, friction: 0.00002,
+    heading: 0, turnSpeed: 0.04, score: 0,
+    vehicleMarker: null, routeCoords: [], currentWaypointIndex: 0
 };
 
 const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowLeft: false, ArrowDown: false, ArrowRight: false };
 
-// Hazards (Placed around Chennai)
 const hazards = [
     { lat: 13.0380, lng: 80.1590, radius: 80, title: '🚦 Traffic Alert', message: 'Heavy congestion detected on Porur Bridge. Find a faster route.', triggered: false },
     { lat: 13.0200, lng: 80.1800, radius: 100, title: '🚧 Construction Alert', message: 'Road construction ahead on Mount Poonamallee Rd. Take a detour.', triggered: false },
     { lat: 12.9800, lng: 80.2150, radius: 120, title: '🌊 Flood Alert', message: 'Flooding ahead near Velachery. Find an alternative route.', triggered: false }
 ];
 
-// === EXISTING DASHBOARD LOGIC ===
+// === DASHBOARD LOGIC ===
 function selectArea(name) {
     cityState.selectedArea = name;
     const area = cityState.areas[name];
@@ -149,7 +141,7 @@ function initMap() {
 }
 
 // ==========================================
-// === NEW: FULL FREE-ROAM DRIVING ENGINE ===
+// === DRIVING GAME ENGINE ===
 // ==========================================
 
 function openVehicleModal() { document.getElementById('vehicle-modal').style.display = 'flex'; }
@@ -158,40 +150,41 @@ function closeModals() {
     document.getElementById('hazard-modal').style.display = 'none';
 }
 
-function startDriving(type) {
+async function startDriving(type) {
     closeModals();
-    gameState.isDriving = true;
-    gameState.isPaused = false;
-    gameState.vehicleType = type;
-    gameState.lat = 13.0358; // Spawn at Porur
-    gameState.lng = 80.1568;
-    gameState.speed = 0;
-    gameState.heading = 0; 
-    gameState.score = 0;
+    gameState.isDriving = true; gameState.isPaused = false; gameState.isWideView = false;
+    gameState.vehicleType = type; gameState.lat = 13.0358; gameState.lng = 80.1568;
+    gameState.speed = 0; gameState.heading = 0; gameState.score = 0; gameState.currentWaypointIndex = 0;
     hazards.forEach(h => h.triggered = false);
 
     document.getElementById('driving-hud').style.display = 'block';
     document.getElementById('nav-banner').style.display = 'flex';
+    document.getElementById('driving-vignette').style.display = 'block'; 
     document.getElementById('drive-btn').innerText = "🛑 Stop Driving";
     document.getElementById('drive-btn').style.background = "#ef4444";
     document.getElementById('score-display').innerText = gameState.score;
+    document.getElementById('view-toggle-btn').innerText = "🗺️ Switch to Wide Map";
 
-    // Disable map dragging so the camera follows the car automatically
     map.dragging.disable();
+    map.setView([gameState.lat, gameState.lng], 17); 
 
     const vehicleEmoji = type === 'bike' ? '🏍️' : '🚗';
-    // The icon needs to rotate based on the heading
     const vehicleIcon = L.divIcon({ 
         className: 'car-icon-container', 
         html: `<div id="car-emoji" style="font-size: 35px; transform: rotate(0deg); transition: transform 0.1s linear;">${vehicleEmoji}</div>`, 
-        iconSize: [35, 35], 
-        iconAnchor: [17, 17] 
+        iconSize: [35, 35], iconAnchor: [17, 17] 
     });
     
     if (gameState.vehicleMarker) map.removeLayer(gameState.vehicleMarker);
     gameState.vehicleMarker = L.marker([gameState.lat, gameState.lng], { icon: vehicleIcon, zIndexOffset: 1000 }).addTo(map);
-    
-    map.setView([gameState.lat, gameState.lng], 16);
+
+    try {
+        const response = await fetch(`https://router.project-osrm.org/route/v1/driving/80.1568,13.0358;80.2210,12.9750?geometries=geojson`);
+        const data = await response.json();
+        gameState.routeCoords = data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
+        if (routeLine) map.removeLayer(routeLine);
+        routeLine = L.polyline(gameState.routeCoords, { className: 'route-line' }).addTo(map);
+    } catch (e) { console.error("Route fetch failed", e); }
     
     requestAnimationFrame(gameLoop);
 }
@@ -200,16 +193,31 @@ function stopDriving() {
     gameState.isDriving = false;
     document.getElementById('driving-hud').style.display = 'none';
     document.getElementById('nav-banner').style.display = 'none';
+    document.getElementById('driving-vignette').style.display = 'none'; 
     document.getElementById('drive-btn').innerText = "🚦 Start Driving Mode";
     document.getElementById('drive-btn').style.background = "#8b5cf6";
-    
     if (gameState.vehicleMarker) map.removeLayer(gameState.vehicleMarker);
-    
+    if (routeLine) map.removeLayer(routeLine);
     map.dragging.enable();
     map.setView([13.0500, 80.2100], 12); 
 }
 
-// Keyboard Controls
+function toggleView() {
+    gameState.isWideView = !gameState.isWideView;
+    const btn = document.getElementById('view-toggle-btn');
+    if (gameState.isWideView) {
+        map.dragging.enable();
+        map.flyTo([gameState.lat, gameState.lng], 13, { duration: 1.5 });
+        document.getElementById('driving-vignette').style.display = 'none';
+        btn.innerText = "🚗 Switch to Driving View"; btn.style.background = "#10b981";
+    } else {
+        map.dragging.disable();
+        map.flyTo([gameState.lat, gameState.lng], 17, { duration: 1.5 });
+        document.getElementById('driving-vignette').style.display = 'block';
+        btn.innerText = "🗺️ Switch to Wide Map"; btn.style.background = "#3b82f6";
+    }
+}
+
 document.addEventListener('keydown', (e) => {
     if (!gameState.isDriving || gameState.isPaused) return;
     let key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
@@ -220,86 +228,85 @@ document.addEventListener('keyup', (e) => {
     if (keys.hasOwnProperty(key)) { keys[key] = false; e.preventDefault(); }
 });
 
-// Mouse Steering
-let mouseX = window.innerWidth / 2;
-document.addEventListener('mousemove', (e) => {
-    if (gameState.isDriving && !gameState.isPaused) {
-        mouseX = e.clientX;
-    }
-});
-
 function gameLoop() {
     if (!gameState.isDriving || gameState.isPaused) return;
 
-    // 1. Acceleration / Braking / Reverse
-    if (keys.w || keys.ArrowUp) {
-        gameState.speed = Math.min(gameState.speed + gameState.acceleration, gameState.maxSpeed);
-    } else if (keys.s || keys.ArrowDown) {
-        // If moving forward, brake hard. If stopped, reverse.
-        if (gameState.speed > 0) {
-            gameState.speed = Math.max(0, gameState.speed - gameState.braking);
-        } else {
-            gameState.speed = Math.max(gameState.speed - gameState.acceleration, gameState.maxReverse);
-        }
+    if (keys.w || keys.ArrowUp) gameState.speed = Math.min(gameState.speed + gameState.acceleration, gameState.maxSpeed);
+    else if (keys.s || keys.ArrowDown) {
+        if (gameState.speed > 0) gameState.speed = Math.max(0, gameState.speed - gameState.braking);
+        else gameState.speed = Math.max(gameState.speed - gameState.acceleration, gameState.maxReverse);
     } else {
-        // Natural Friction (slow down if no keys pressed)
         if (gameState.speed > 0) gameState.speed = Math.max(0, gameState.speed - gameState.friction);
         if (gameState.speed < 0) gameState.speed = Math.min(0, gameState.speed + gameState.friction);
     }
 
-    // 2. Steering Physics (Speed dependent - can't turn if stopped)
-    const speedFactor = Math.abs(gameState.speed) / gameState.maxSpeed; // 0 to 1
-    
+    const speedFactor = Math.abs(gameState.speed) / gameState.maxSpeed;
     if (speedFactor > 0.05) {
         if (keys.a || keys.ArrowLeft) gameState.heading -= gameState.turnSpeed * speedFactor;
         if (keys.d || keys.ArrowRight) gameState.heading += gameState.turnSpeed * speedFactor;
-        
-        // Mouse Steering (Optional smooth turning based on mouse X position)
-        const centerX = window.innerWidth / 2;
-        const mouseOffset = (mouseX - centerX) / centerX; // -1 to 1
-        if (Math.abs(mouseOffset) > 0.1) {
-             gameState.heading += mouseOffset * 0.02 * speedFactor;
-        }
     }
 
-    // 3. Calculate new position
     if (gameState.speed !== 0) {
-        // 1 degree of latitude is roughly 111,320 meters. We scale speed to degrees.
-        const moveDist = gameState.speed * 50; // 50 is a magic scaling number for visual speed
-        const newLat = gameState.lat + (Math.cos(gameState.heading) * moveDist);
-        const newLng = gameState.lng + (Math.sin(gameState.heading) * moveDist);
-        
-        gameState.lat = newLat;
-        gameState.lng = newLng;
+        const moveDist = gameState.speed * 50; 
+        gameState.lat += Math.cos(gameState.heading) * moveDist;
+        gameState.lng += Math.sin(gameState.heading) * moveDist;
 
-        // 4. Update Vehicle & Camera
         gameState.vehicleMarker.setLatLng([gameState.lat, gameState.lng]);
-        
-        // Rotate Emoji
         const emojiDiv = document.getElementById('car-emoji');
-        // Offset by 90 degrees because emojis face left by default
         if(emojiDiv) emojiDiv.style.transform = `rotate(${gameState.heading + Math.PI/2}rad)`;
 
-        // Third-Person Follow Camera: Pan map to vehicle
-        map.setView([gameState.lat, gameState.lng], map.getZoom(), { animate: false });
+        if (!gameState.isWideView) map.setView([gameState.lat, gameState.lng], map.getZoom(), { animate: false });
 
-        // Check Hazards
         checkHazards(gameState.lat, gameState.lng);
+        updateTurnByTurn();
     }
 
-    // 5. Update HUD Speed
     document.getElementById('speed-display').innerText = Math.abs(Math.round(gameState.speed * 5000)) + " km/h";
-    
     requestAnimationFrame(gameLoop);
+}
+
+function updateTurnByTurn() {
+    if (!gameState.routeCoords || gameState.routeCoords.length === 0) return;
+    
+    const currentPos = L.latLng(gameState.lat, gameState.lng);
+    let closestIndex = gameState.currentWaypointIndex;
+    let minDist = Infinity;
+
+    for (let i = gameState.currentWaypointIndex; i < Math.min(gameState.currentWaypointIndex + 20, gameState.routeCoords.length); i++) {
+        const dist = currentPos.distanceTo(L.latLng(gameState.routeCoords[i]));
+        if (dist < minDist) { minDist = dist; closestIndex = i; }
+    }
+    gameState.currentWaypointIndex = closestIndex;
+
+    const lookAheadIndex = Math.min(closestIndex + 5, gameState.routeCoords.length - 1);
+    if (lookAheadIndex === closestIndex) return;
+
+    const currentPt = gameState.routeCoords[closestIndex];
+    const nextPt = gameState.routeCoords[lookAheadIndex];
+    const distToNext = currentPos.distanceTo(L.latLng(nextPt));
+
+    const bearing = Math.atan2(nextPt[1] - currentPt[1], nextPt[0] - currentPt[0]);
+    let angleDiff = bearing - gameState.heading;
+    while (angleDiff > Math.PI) angleDiff -= 2 * Math.PI;
+    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+
+    const navInstruction = document.getElementById('nav-instruction');
+    const navIcon = document.getElementById('nav-icon');
+
+    if (distToNext < 150) {
+        if (angleDiff > 0.4) { navInstruction.innerText = `Turn Right in ${Math.round(distToNext)}m`; navIcon.innerText = "➡️"; }
+        else if (angleDiff < -0.4) { navInstruction.innerText = `Turn Left in ${Math.round(distToNext)}m`; navIcon.innerText = "⬅️"; }
+        else { navInstruction.innerText = `Continue straight for ${Math.round(distToNext)}m`; navIcon.innerText = "⬆️"; }
+    } else {
+        navInstruction.innerText = "Continue on route"; navIcon.innerText = "⬆️";
+    }
 }
 
 function checkHazards(lat, lng) {
     const currentPos = L.latLng(lat, lng);
     for (let hazard of hazards) {
         if (hazard.triggered) continue;
-        const hazardPos = L.latLng(hazard.lat, hazard.lng);
-        // Distance in meters
-        if (currentPos.distanceTo(hazardPos) < hazard.radius) {
+        if (currentPos.distanceTo(L.latLng(hazard.lat, hazard.lng)) < hazard.radius) {
             hazard.triggered = true;
             triggerHazard(hazard);
             break;
@@ -308,15 +315,11 @@ function checkHazards(lat, lng) {
 }
 
 function triggerHazard(hazard) {
-    gameState.isPaused = true;
-    gameState.speed = 0; // Sudden stop
-    
-    // Update Navigation Banner
+    gameState.isPaused = true; gameState.speed = 0;
     document.getElementById('nav-icon').innerText = "⚠️";
     document.getElementById('nav-banner').style.background = "#ef4444";
     document.getElementById('nav-instruction').innerText = hazard.title;
     document.getElementById('nav-subtext').innerText = "Click 'Detour' in the popup.";
-
     document.getElementById('hazard-title').innerText = hazard.title;
     document.getElementById('hazard-message').innerText = hazard.message;
     document.getElementById('hazard-modal').style.display = 'flex';
@@ -324,24 +327,16 @@ function triggerHazard(hazard) {
 
 function resolveHazard(action) {
     document.getElementById('hazard-modal').style.display = 'none';
-    
     if (action === 'detour') {
-        gameState.score += 50;
-        showFloatingText("+50 PTS", '#10b981');
-        // Nudge player backward slightly so they don't instantly re-trigger it
+        gameState.score += 50; showFloatingText("+50 PTS", '#10b981');
         gameState.lat -= (Math.cos(gameState.heading) * 0.001);
         gameState.lng -= (Math.sin(gameState.heading) * 0.001);
     } else {
-        gameState.score = Math.max(0, gameState.score - 20);
-        showFloatingText("-20 PTS", '#ef4444');
+        gameState.score = Math.max(0, gameState.score - 20); showFloatingText("-20 PTS", '#ef4444');
     }
-    
-    // Reset Banner
     document.getElementById('nav-icon').innerText = "⬆️";
     document.getElementById('nav-banner').style.background = "#006b52";
-    document.getElementById('nav-instruction').innerText = "Free Roam Mode";
     document.getElementById('nav-subtext').innerText = "Drive safely to your destination";
-
     document.getElementById('score-display').innerText = gameState.score;
     gameState.isPaused = false;
     requestAnimationFrame(gameLoop);
