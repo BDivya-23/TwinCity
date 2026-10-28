@@ -32,9 +32,9 @@ body {
 .area-btn:hover { background: #d4af37; color: #0a1628; transform: scale(1.1); }
 
 /* Position each area on the map */
-#velachery    { top: 60%; left: 45%; }
-#vadapalani   { top: 30%; left: 50%; }
-#porur        { top: 25%; left: 25%; }
+#btn-Velachery  { top: 65%; left: 35%; }
+#btn-Vadapalani { top: 45%; left: 60%; }
+#btn-Porur      { top: 25%; left: 20%; }
 
 /* Right: Dashboard */
 #dashboard {
