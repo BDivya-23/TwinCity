@@ -21,7 +21,11 @@
 
         <h2>Selected Area</h2>
         <div id="problem-panel">Click a location on the map to begin.</div>
-
+        <h2>What If? Simulator</h2>
+<div style="display:flex; gap:10px; margin-bottom: 15px;">
+    <button class="action" style="background:#3b82f6; color:white;" onclick="quickPropose('Build a metro')">🚇 Build Metro</button>
+    <button class="action" style="background:#10b981; color:white;" onclick="quickPropose('Build a new drainage system')">🌊 Fix Drainage</button>
+</div>
         <h2>Propose a Solution</h2>
         <textarea id="proposal-input" placeholder="e.g., Build a new drainage system..."></textarea>
         <button class="action" onclick="evaluateProposal()">🔍 Evaluate Proposal</button>
