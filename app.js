@@ -77,6 +77,7 @@ function approveProposal() {
     cityState.happiness = Math.min(100, cityState.happiness + 5);
 
     updateDashboard();
+    saveGame();
     document.getElementById('approve-btn').disabled = true;
     document.getElementById('advisor-response').innerHTML +=
         `<br><br><span style="color:#4ade80">✔ Implemented! Budget: ₹${cityState.budget} Cr</span>`;
@@ -89,5 +90,17 @@ function updateDashboard() {
     if (cityState.selectedArea) selectArea(cityState.selectedArea);
 }
 
-// Initialize on load
-window.onload = updateDashboard;
+// Initialize on load// Initialize on load
+window.onload = function() {
+    const savedState = localStorage.getItem('twinCityState');
+    if (savedState) {
+        // Load saved game
+        Object.assign(cityState, JSON.parse(savedState));
+    }
+    updateDashboard();
+};
+
+// Save game after every decision
+function saveGame() {
+    localStorage.setItem('twinCityState', JSON.stringify(cityState));
+}
