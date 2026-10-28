@@ -46,17 +46,11 @@
         <div id="problem-panel">Click a location on the map to begin.</div>
         
         <h2>What If? Simulator</h2>
-        <div style="display:flex; gap:10px; margin-bottom: 10px;">
-            <button class="action" style="margin-top:0; background: #3b82f6; color: white !important; font-size: 14px;" onclick="simulateWhatIf('metro')">🚇 Build Metro</button>
-            <button class="action" style="margin-top:0; background: #10b981; color: white !important; font-size: 14px;" onclick="simulateWhatIf('drainage')">🌊 Fix Drainage</button>
-        </div>
-        
-        <div id="what-if-result" style="display:none; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; border-left: 4px solid #3b82f6;"></div>
-        
-        <div style="display:flex; gap:10px; margin-bottom: 5px;">
-            <button class="action" style="margin-top:0; background: rgba(59, 130, 246, 0.8);" onclick="quickPropose('Build a metro')">🚇 Build Metro</button>
-            <button class="action" style="margin-top:0; background: rgba(16, 185, 129, 0.8);" onclick="quickPropose('Build a new drainage system')">🌊 Fix Drainage</button>
-        </div>
+<div style="display:flex; gap:10px; margin-bottom: 10px;">
+    <button class="action" style="margin-top:0; background: #3b82f6; color: white !important; font-size: 14px;" onclick="simulateWhatIf('metro')">🚇 Build Metro</button>
+    <button class="action" style="margin-top:0; background: #10b981; color: white !important; font-size: 14px;" onclick="simulateWhatIf('drainage')">🌊 Fix Drainage</button>
+</div>
+<div id="what-if-result" style="display:none; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; border-left: 4px solid #3b82f6;"></div>
         
         <h2>Propose a Solution</h2>
         <textarea id="proposal-input" placeholder="e.g., Build a new drainage system..."></textarea>
