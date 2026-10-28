@@ -8,7 +8,6 @@ const cityState = {
     }
 };
 
-// Locations accessible for spawning the vehicle
 const locations = [ 
     { name: 'Velachery', coords: [12.9750, 80.2210] }, 
     { name: 'Vadapalani', coords: [13.0503, 80.2121] }, 
@@ -25,6 +24,7 @@ const advisorRules = [
 let currentProposal = null;
 let map;
 let mapMarkers = {}; 
+let ambientCars = []; 
 
 // === GAME ENGINE STATE ===
 let gameState = {
@@ -60,6 +60,14 @@ function selectArea(name) {
     document.getElementById('advisor-container').style.display = 'none';
     document.getElementById('what-if-result').style.display = 'none';
     document.getElementById('approve-btn').disabled = true;
+
+    // ENHANCEMENT 2: Trigger Rain for Velachery
+    const rainOverlay = document.getElementById('rain-overlay');
+    if (name === 'Velachery') {
+        rainOverlay.style.display = 'block';
+    } else {
+        rainOverlay.style.display = 'none';
+    }
 }
 
 function evaluateProposal() {
@@ -123,7 +131,10 @@ function updateDashboard() {
 window.onload = function() {
     const savedState = localStorage.getItem('twinCityState');
     if (savedState) Object.assign(cityState, JSON.parse(savedState));
-    initMap(); updateDashboard(); checkWinCondition(); 
+    initMap(); 
+    spawnTraffic(); // ENHANCEMENT 3: Spawn ambient traffic
+    updateDashboard(); 
+    checkWinCondition(); 
     setTimeout(() => { map.invalidateSize(); }, 200);
 };
 
@@ -150,6 +161,33 @@ function initMap() {
         mapMarkers[loc.name] = marker;
         marker.on('click', function() { selectArea(loc.name); });
     });
+}
+
+// ==========================================
+// === ENHANCEMENT 3: AMBIENT TRAFFIC ===
+// ==========================================
+function spawnTraffic() {
+    const emojis = ['🚙', '🚕', '🚌', '🚚', '🛵'];
+    
+    for(let i=0; i<10; i++) {
+        // Randomize positions around the center of Chennai
+        const lat = 13.0500 + (Math.random() - 0.5) * 0.08;
+        const lng = 80.2100 + (Math.random() - 0.5) * 0.08;
+        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+        
+        // Random rotation to make them look parked or driving in different directions
+        const rotation = Math.random() * 360;
+        
+        const carIcon = L.divIcon({ 
+            className: 'custom-div-icon', 
+            html: `<div style="font-size: 22px; opacity: 0.85; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5)); transform: rotate(${rotation}deg);">${emoji}</div>`, 
+            iconSize: [22, 22],
+            iconAnchor: [11, 11]
+        });
+        
+        const marker = L.marker([lat, lng], { icon: carIcon, zIndexOffset: 100 }).addTo(map);
+        ambientCars.push(marker);
+    }
 }
 
 // ==========================================
@@ -219,6 +257,11 @@ function stopDriving() {
     document.getElementById('drive-btn').innerText = "🚦 Start Driving Mode";
     document.getElementById('drive-btn').style.background = "#8b5cf6";
     
+    // Also hide rain when stopping
+    if(cityState.selectedArea !== 'Velachery') {
+        document.getElementById('rain-overlay').style.display = 'none';
+    }
+
     if (gameState.vehicleMarker) map.removeLayer(gameState.vehicleMarker);
     map.dragging.enable();
     map.setView([13.0500, 80.2100], 12); 
