@@ -11,7 +11,7 @@ body {
     color: #ffffff;
     height: 100vh;
     overflow: hidden;
-    /* Use Flexbox to put Map and Dashboard side-by-side */
+    /* Flexbox to put Map and Dashboard side-by-side */
     display: flex;
     flex-wrap: wrap; 
 }
@@ -50,15 +50,15 @@ body {
 
 /* === INTERACTIVE MAP === */
 #map {
-    flex: 1; /* Takes up all remaining space on the left */
-    height: calc(100vh - 60px); /* Full height minus the header */
-    background: #0a1628;
+    flex: 1; 
+    height: calc(100vh - 60px); 
+    background: #e5e5e5; /* Light gray background while loading */
     z-index: 1;
 }
 
 /* === DASHBOARD === */
 #dashboard {
-    width: 480px; /* Fixed width on the right */
+    width: 480px; 
     height: calc(100vh - 60px);
     padding: 25px;
     background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
@@ -184,7 +184,7 @@ button.action:disabled { background: #475569; cursor: not-allowed; opacity: 0.7;
 
 /* === MAP MARKERS (Glowing Pins) === */
 .map-marker {
-    background: rgba(15, 23, 42, 0.85);
+    background: rgba(15, 23, 42, 0.9); /* Dark background for contrast on light map */
     border: 2px solid #ef4444;
     color: #fff;
     padding: 8px 14px;
@@ -192,7 +192,7 @@ button.action:disabled { background: #475569; cursor: not-allowed; opacity: 0.7;
     font-size: 14px;
     font-weight: 600;
     text-align: center;
-    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
     backdrop-filter: blur(4px);
     cursor: pointer;
     transition: all 0.3s ease;
@@ -229,16 +229,13 @@ button.action:disabled { background: #475569; cursor: not-allowed; opacity: 0.7;
     border: none !important;
 }
 
-/* Dark mode map filter */
-.leaflet-layer {
-    filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(1.2);
-}
-
+/* LIGHT MODE ZOOM BUTTONS */
 .leaflet-bar a {
-    background-color: #1e293b !important;
-    color: white !important;
-    border-bottom: 1px solid #0f172a !important;
+    background-color: #ffffff !important;
+    color: #333 !important;
+    border-bottom: 1px solid #ccc !important;
 }
 .leaflet-bar a:hover {
-    background-color: #3b82f6 !important;
+    background-color: #f4f4f4 !important;
+    color: #000 !important;
 }
