@@ -1,86 +1,244 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* === RESET & BASE === */
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+}
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #0a1628;
+    background: #000;
     color: #ffffff;
     height: 100vh;
     overflow: hidden;
+    /* Use Flexbox to put Map and Dashboard side-by-side */
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap; 
 }
 
-/* Top Bar */
+/* === TOP BAR === */
 #top-bar {
+    width: 100%;
     height: 60px;
-    background: #111827;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0 30px;
-    border-bottom: 2px solid #3b82f6;
+    border-bottom: 2px solid rgba(59, 130, 246, 0.3);
     z-index: 1000;
+    flex-shrink: 0;
 }
 
-.logo { font-size: 20px; font-weight: 800; color: #f8fafc; }
-.badge { background: #3b82f6; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
-
-/* Main Layout */
-#main-layout {
-    display: flex;
-    flex-direction: row; /* THIS is what puts map left, dashboard right */
-    height: calc(100vh - 60px);
-    width: 100vw;
+.logo {
+    font-size: 20px;
+    font-weight: 800;
+    color: #f8fafc;
+    letter-spacing: 1px;
 }
 
-/* Left: Map Area (Takes up remaining space) */
+.badge {
+    background: #3b82f6;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* === INTERACTIVE MAP === */
 #map {
-    flex: 2; /* Takes 2/3 of the width */
-    height: 100%;
-    background: #1e293b;
+    flex: 1; /* Takes up all remaining space on the left */
+    height: calc(100vh - 60px); /* Full height minus the header */
+    background: #0a1628;
     z-index: 1;
 }
 
-/* Custom Map Markers */
-.map-marker {
-    background: rgba(15, 23, 42, 0.9);
-    border: 2px solid #ef4444;
-    color: white;
-    padding: 8px 12px;
-    border-radius: 20px;
-    font-weight: bold;
-    font-size: 14px;
-    text-align: center;
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-    cursor: pointer;
-    white-space: nowrap;
-}
-.map-marker:hover { transform: scale(1.1); background: #ef4444; }
-.map-marker.solved { border-color: #10b981 !important; box-shadow: 0 0 15px rgba(16, 185, 129, 0.6); }
-
-/* Right: Dashboard (Fixed width) */
+/* === DASHBOARD === */
 #dashboard {
-    width: 450px; /* Fixed width for dashboard */
-    height: 100%;
+    width: 480px; /* Fixed width on the right */
+    height: calc(100vh - 60px);
     padding: 25px;
-    background: #0f172a;
-    border-left: 2px solid #3b82f6;
+    background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
+    border-left: 2px solid rgba(59, 130, 246, 0.3);
     overflow-y: auto;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.8);
+    z-index: 10;
+    flex-shrink: 0;
 }
 
-h1 { color: #f8fafc; font-size: 24px; margin-bottom: 20px; text-align: center; }
-h2 { color: #94a3b8; font-size: 12px; text-transform: uppercase; margin: 25px 0 10px; border-bottom: 1px solid #334155; padding-bottom: 5px; }
+/* === DASHBOARD TYPOGRAPHY & UI === */
+h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #f8fafc;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
 
-.stat { display: flex; justify-content: space-between; padding: 12px 15px; background: #1e293b; border-radius: 8px; margin-bottom: 8px; font-size: 14px; }
-.stat span:last-child { color: #10b981; font-weight: bold; }
+h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #94a3b8;
+    margin: 25px 0 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 5px;
+}
 
-#problem-panel { background: rgba(239, 68, 68, 0.15); padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444; font-size: 14px; }
+.stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.stat span:last-child {
+    color: #10b981;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+#problem-panel {
+    background: rgba(239, 68, 68, 0.15);
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #ef4444;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
 #problem-panel strong { color: #fca5a5; font-size: 16px; }
 
-textarea { width: 100%; height: 80px; background: #1e293b; border: 1px solid #475569; color: #fff; padding: 12px; border-radius: 8px; margin-top: 8px; resize: none; }
+textarea {
+    width: 100%;
+    height: 80px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 8px;
+    resize: none;
+    font-family: inherit;
+    transition: border-color 0.3s;
+}
+textarea:focus { outline: none; border-color: #3b82f6; }
 
-button.action { width: 100%; margin-top: 12px; padding: 12px; background: #3b82f6; border: none; color: white; font-weight: 600; border-radius: 8px; cursor: pointer; }
-button.action:disabled { background: #475569; cursor: not-allowed; }
+button.action {
+    width: 100%;
+    margin-top: 12px;
+    padding: 12px;
+    background: #3b82f6;
+    border: none;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.1s;
+}
+button.action:hover { background: #2563eb; }
+button.action:active { transform: scale(0.98); }
+button.action:disabled { background: #475569; cursor: not-allowed; opacity: 0.7; }
+
 #approve-btn { background: #10b981; }
+#approve-btn:hover { background: #059669; }
 
-#advisor-response { margin-top: 15px; padding: 15px; background: rgba(59, 130, 246, 0.15); border-left: 4px solid #3b82f6; border-radius: 8px; display: none; }
+#advisor-response {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(59, 130, 246, 0.15);
+    border-left: 4px solid #3b82f6;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    display: none;
+}
+
+/* === GAME PROGRESS BARS === */
+.progress-container {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    margin-bottom: 5px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.progress-bar {
+    height: 100%;
+    background: #3b82f6; 
+    border-radius: 4px;
+    transition: width 0.5s ease-in-out, background-color 0.5s ease;
+}
+
+/* === MAP MARKERS (Glowing Pins) === */
+.map-marker {
+    background: rgba(15, 23, 42, 0.85);
+    border: 2px solid #ef4444;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+    backdrop-filter: blur(4px);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.map-marker:not(.solved) {
+    animation: pulse-red 2s infinite;
+}
+
+.map-marker:hover {
+    transform: scale(1.1) translateY(-2px);
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+}
+
+.map-marker.solved {
+    border-color: #10b981 !important;
+    background: rgba(16, 185, 129, 0.9) !important;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6) !important;
+    color: white;
+    animation: none;
+}
+
+@keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* === LEAFLET MAP OVERRIDES === */
+.leaflet-div-icon {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* Dark mode map filter */
+.leaflet-layer {
+    filter: invert(1) hue-rotate(180deg) brightness(0.85) contrast(1.2);
+}
+
+.leaflet-bar a {
+    background-color: #1e293b !important;
+    color: white !important;
+    border-bottom: 1px solid #0f172a !important;
+}
+.leaflet-bar a:hover {
+    background-color: #3b82f6 !important;
+}
