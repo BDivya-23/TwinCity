@@ -84,18 +84,22 @@ function approveProposal() {
 }
 
 // === UPDATE UI ===
-/* Solved state for map buttons */
-.area-btn.solved {
-    background: #10b981 !important; /* Green */
-    border-color: #10b981 !important;
-    color: white !important;
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
-}
+function updateDashboard() {
+    document.getElementById('budget').textContent = `₹${cityState.budget} Cr`;
+    document.getElementById('happiness').textContent = `${cityState.happiness}%`;
+    
+    // Update the map visuals
+    for (let name in cityState.areas) {
+        const btn = document.getElementById(`btn-${name}`);
+        if (btn) {
+            if (cityState.areas[name].solved) {
+                btn.classList.add('solved');
+                btn.innerHTML = `✅ ${name} (Solved)`;
+            }
+        }
+    }
 
-/* Red border for unsolved problems */
-.area-btn:not(.solved) {
-    border-color: #ef4444 !important; /* Red */
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+    if (cityState.selectedArea) selectArea(cityState.selectedArea);
 }
 
 // Initialize on load// Initialize on load
