@@ -20,6 +20,10 @@ const advisorRules = [
 
 let currentProposal = null;
 
+// === MAP VARIABLES ===
+let map;
+let mapMarkers = {}; 
+
 // === SELECT AREA ===
 function selectArea(name) {
     cityState.selectedArea = name;
@@ -33,7 +37,7 @@ function selectArea(name) {
     document.getElementById('approve-btn').disabled = true;
 }
 
-// === QUICK PROPOSE (Fixes the missing function in your HTML) ===
+// === QUICK PROPOSE ===
 function quickPropose(text) {
     document.getElementById('proposal-input').value = text;
     evaluateProposal();
@@ -42,6 +46,7 @@ function quickPropose(text) {
 // === EVALUATE PROPOSAL ===
 function evaluateProposal() {
     const text = document.getElementById('proposal-input').value.toLowerCase();
+    
     if (!cityState.selectedArea) {
         alert("Please click a location on the map first!");
         return;
@@ -85,11 +90,12 @@ function approveProposal() {
         return;
     }
 
+    // Deduct Budget & Fix Area
     cityState.budget -= currentProposal.cost;
     area.flood = Math.max(0, area.flood - currentProposal.impact);
     area.solved = true;
     
-    // Smarter Happiness Logic
+    // Happiness Logic
     let happinessBonus = 5; 
     if (currentProposal.keywords.includes('park')) happinessBonus = 15; 
     if (currentProposal.keywords.includes('drain')) happinessBonus = 10; 
@@ -97,39 +103,49 @@ function approveProposal() {
     
     cityState.happiness = Math.min(100, cityState.happiness + happinessBonus);
 
+    // Update UI & Save
     updateDashboard();
     saveGame();
+    
     document.getElementById('approve-btn').disabled = true;
     document.getElementById('advisor-response').innerHTML +=
         `<br><br><span style="color:#4ade80">✔ Implemented! Budget: ₹${cityState.budget} Cr</span>`;
         
-    checkWinCondition(); // Check if game is won
+    checkWinCondition(); 
 }
 
-// === UPDATE UI ===
+// === UPDATE UI (Text, Progress Bars, and Map) ===
 function updateDashboard() {
-    // Update Text
+    // 1. Update Text
     document.getElementById('budget').textContent = `₹${cityState.budget} Cr`;
     document.getElementById('happiness').textContent = `${cityState.happiness}%`;
     
-    // Update Progress Bars
+    // 2. Update Progress Bars
     const budgetPercent = (cityState.budget / 100) * 100;
     document.getElementById('budget-bar').style.width = `${budgetPercent}%`;
-    if (budgetPercent < 30) document.getElementById('budget-bar').style.background = '#ef4444'; // Turns red if broke
     
-    document.getElementById('happiness-bar').style.width = `${cityState.happiness}%`;
+    // Turn budget bar red if money is low
+    if (budgetPercent < 30) {
+        document.getElementById('budget-bar').style.background = '#ef4444'; 
+    }
 
-    // Update the map visuals
+    const happinessPercent = cityState.happiness;
+    document.getElementById('happiness-bar').style.width = `${happinessPercent}%`;
+
+    // 3. Update the Map Markers (Turn green if solved)
     for (let name in cityState.areas) {
-        const btn = document.getElementById(`btn-${name}`);
-        if (btn) {
-            if (cityState.areas[name].solved) {
-                btn.classList.add('solved');
-                btn.innerHTML = `✅ ${name} (Solved)`;
-            }
+        if (cityState.areas[name].solved && mapMarkers[name]) {
+            // Change the Leaflet marker icon to a green "Solved" state
+            mapMarkers[name].setIcon(L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div class='map-marker solved'>✅ ${name} (Solved)</div>`,
+                iconSize: [150, 30],
+                iconAnchor: [75, 15]
+            }));
         }
     }
 
+    // Refresh the selected area panel
     if (cityState.selectedArea) selectArea(cityState.selectedArea);
 }
 
@@ -143,10 +159,10 @@ window.onload = function() {
     // Initialize the map first, THEN update the dashboard
     initMap();
     updateDashboard();
-    checkWinCondition(); // Check if they already won before refreshing
+    checkWinCondition(); 
 };
 
-// Save game after every decision
+// === SAVE GAME ===
 function saveGame() {
     localStorage.setItem('twinCityState', JSON.stringify(cityState));
 }
@@ -198,17 +214,13 @@ function simulateWhatIf(type) {
 // ==========================================
 // ===== REAL INTERACTIVE MAP SETUP =========
 // ==========================================
-let map;
-let mapMarkers = {}; // Store markers so we can change their color later
-
 function initMap() {
     // 1. Initialize map centered on Chennai
     map = L.map('map').setView([13.0500, 80.2100], 11);
 
-    // 2. Add Dark Mode map layer
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap &copy; CARTO',
-        subdomains: 'abcd',
+    // 2. Add Free Map layer (This fixes the API Key watermark)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
         maxZoom: 19
     }).addTo(map);
 
