@@ -88,7 +88,7 @@ button.action:disabled { background: #475569; cursor: not-allowed; opacity: 0.7;
 .hud-item { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #f8fafc; }
 .hud-item span { color: #10b981; }
 
-/* === NAVIGATION BANNER (Google Maps Style) === */
+/* === NAVIGATION BANNER === */
 #nav-banner {
     display: none; position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
     background: #006b52; color: white; padding: 15px 25px; border-radius: 12px;
@@ -99,12 +99,52 @@ button.action:disabled { background: #475569; cursor: not-allowed; opacity: 0.7;
 .nav-text h3 { margin: 0; font-size: 18px; font-weight: 700; }
 .nav-text p { margin: 0; font-size: 13px; color: #a7f3d0; }
 
-/* === BLUE ROUTE LINE === */
-.route-line { stroke: #3b82f6; stroke-width: 6; stroke-opacity: 0.9; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0px 0px 4px rgba(59, 130, 246, 0.8)); }
-
-/* === DRIVING IMMERSION VIGNETTE === */
+/* === IMMERSION VIGNETTE === */
 #driving-vignette {
     display: none; position: fixed; top: 60px; left: 0;
     width: calc(100vw - 480px); height: calc(100vh - 60px);
     pointer-events: none; box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.8); z-index: 450;
+}
+
+/* === MOBILE TOUCH CONTROLS === */
+#touch-controls {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 6000;
+}
+
+.d-pad {
+    display: grid;
+    grid-template-columns: 60px 60px 60px;
+    grid-template-rows: 60px 60px;
+    gap: 5px;
+}
+
+.touch-btn {
+    background: rgba(15, 23, 42, 0.8);
+    border: 2px solid #3b82f6;
+    color: white;
+    font-size: 24px;
+    border-radius: 10px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.touch-btn:active { background: #3b82f6; }
+.up { grid-column: 2; grid-row: 1; }
+.left { grid-column: 1; grid-row: 2; }
+.down { grid-column: 2; grid-row: 2; }
+.right { grid-column: 3; grid-row: 2; }
+
+@media (max-width: 1024px) {
+    #touch-controls { display: block; }
+    html, body { grid-template-columns: 1fr; grid-template-rows: 60px 1fr 300px; }
+    #map { grid-column: 1; grid-row: 2; }
+    #dashboard { grid-column: 1; grid-row: 3; width: 100%; border-left: none; border-top: 2px solid #3b82f6; }
+    #driving-vignette { width: 100vw; height: calc(100vh - 360px); }
 }
