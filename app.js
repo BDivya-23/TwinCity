@@ -1,4 +1,6 @@
 // === STATE ===
+const GAME_VERSION = "1.0.15"; // Version control to force update old saves
+
 const cityState = {
     budget: 400, happiness: 65, selectedArea: null,
     areas: {
@@ -12,7 +14,7 @@ const cityState = {
         Koyambedu:  { flood: 40, traffic: 80, solved: false },
         "Tidel Park": { flood: 70, traffic: 50, solved: false },
         Tambaram:   { flood: 50, traffic: 75, solved: false },
-        // NEW CITIES
+        // NEW 5 CITIES
         Adyar:      { flood: 45, traffic: 65, solved: false },
         Guindy:     { flood: 30, traffic: 85, solved: false },
         Chromepet:  { flood: 60, traffic: 55, solved: false },
@@ -32,7 +34,6 @@ const locations = [
     { name: 'Koyambedu', coords: [13.0700, 80.1950] },
     { name: 'Tidel Park', coords: [12.9900, 80.2450] },
     { name: 'Tambaram', coords: [12.9200, 80.1200] },
-    // NEW COORDS
     { name: 'Adyar', coords: [13.0067, 80.2570] },
     { name: 'Guindy', coords: [13.0067, 80.2206] },
     { name: 'Chromepet', coords: [12.9516, 80.1462] },
@@ -276,7 +277,6 @@ function updateDashboard() {
 
     for (let name in cityState.areas) {
         if (cityState.areas[name].solved) {
-            // Sanitize the name to find the correct ID (removes spaces/dots)
             const safeName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
             const badge = document.getElementById(`badge-${safeName}`);
             if (badge) {
@@ -300,7 +300,7 @@ function updateDashboard() {
 
 function renderDonut() {
     const remaining = cityState.budget;
-    const total = 400; // Updated to match new total budget
+    const total = 400; 
     const spent = Math.max(0, total - remaining);
     const circumference = 2 * Math.PI * 50;
 
@@ -381,7 +381,6 @@ function renderCityInfrastructure() {
 
     infrastructureLayer.clearLayers(); 
 
-    // Existing 10
     if (cityState.areas['Vadapalani'].solved) {
         const metroCoords = [ [13.0503, 80.2121], [13.0450, 80.2200], [13.0400, 80.2350], [13.0350, 80.2500] ];
         L.polyline(metroCoords, { color: '#3b82f6', weight: 6, opacity: 0.9, dashArray: '10, 10', lineCap: 'round', className: 'metro-line-anim' }).addTo(infrastructureLayer).bindTooltip("🚇 New Metro Extension", { permanent: true, direction: "right", className: 'map-tooltip' });
@@ -423,7 +422,7 @@ function renderCityInfrastructure() {
         L.polyline(tambaramCoords, { color: '#3b82f6', weight: 6, opacity: 0.9, dashArray: '10, 10' }).addTo(infrastructureLayer).bindTooltip("🚆 Tambaram Rail Upgrade", { permanent: true, direction: "right", className: 'map-tooltip' });
     }
 
-    // NEW 5 CITIES
+    // NEW CITIES
     if (cityState.areas['Adyar'].solved) {
         const adyarCoords = [ [13.0067, 80.2570], [13.0100, 80.2600] ];
         L.polyline(adyarCoords, { color: '#3b82f6', weight: 6, opacity: 0.9 }).addTo(infrastructureLayer).bindTooltip("🌉 Adyar Bridge", { permanent: true, direction: "right", className: 'map-tooltip' });
@@ -484,8 +483,17 @@ function discoverProblem(areaName) {
 // INITIALIZATION & HELPERS
 // =============================================================
 window.onload = function() {
+    // VERSION CONTROL FIX: Clear old saves that don't have the 15 cities
     const savedState = localStorage.getItem('twinCityState');
-    if (savedState) Object.assign(cityState, JSON.parse(savedState));
+    if (savedState) {
+        const parsed = JSON.parse(savedState);
+        if (parsed.version === GAME_VERSION) {
+            Object.assign(cityState, parsed);
+        } else {
+            console.log("Old save file detected. Resetting to 15 cities...");
+            localStorage.removeItem('twinCityState');
+        }
+    }
     
     initMap(); 
     initInfrastructureLayer();
@@ -507,7 +515,10 @@ window.onload = function() {
     }, 250);
 };
 
-function saveGame() { localStorage.setItem('twinCityState', JSON.stringify(cityState)); }
+function saveGame() { 
+    cityState.version = GAME_VERSION; // Save the version number
+    localStorage.setItem('twinCityState', JSON.stringify(cityState)); 
+}
 function checkWinCondition() { if (Object.values(cityState.areas).every(a => a.solved)) { setTimeout(() => { document.getElementById('victory-screen').style.display = 'flex'; }, 1000); } }
 function resetGame() { localStorage.removeItem('twinCityState'); location.reload(); }
 function showFloatingText(text, color) { const el = document.createElement('div'); el.className = 'floating-text'; el.textContent = text; el.style.color = color; el.style.left = '60%'; el.style.top = '40%'; document.body.appendChild(el); setTimeout(() => el.remove(), 1500); }
