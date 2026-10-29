@@ -25,11 +25,30 @@ let currentProposal = null;
 let map;
 let mapMarkers = {}; 
 let infrastructureLayer; // Layer group for Map Transformations
-let ambientCars = []; // For Ambient Traffic
 
 // =============================================================
-// PER-AREA MINI-CARDS
+// PER-AREA MINI-CARDS & MAP ZOOM
 // =============================================================
+function handleAreaCardClick(name) {
+    // 1. Cinematic Map Fly-To
+    if (map) {
+        const loc = locations.find(l => l.name === name);
+        if (loc) map.flyTo(loc.coords, 15, { duration: 1.5 });
+    }
+
+    // 2. Update State & UI
+    if (typeof selectArea === 'function') {
+        selectArea(name, true); 
+    }
+    renderAreaCards();
+    
+    const panel = document.getElementById('problem-panel');
+    if (panel) {
+        const a = cityState.areas[name];
+        panel.innerHTML = `<strong>${name}</strong><br>Flood Severity: ${a.flood}/100<br>Traffic: ${a.traffic}/100`;
+    }
+}
+
 function renderAreaCards() {
     const container = document.getElementById('area-cards-container');
     if (!container) return;
@@ -40,7 +59,6 @@ function renderAreaCards() {
         const a = cityState.areas[name];
         const isSelected = cityState.selectedArea === name;
 
-        // If solved, force visual stats to 0
         const displayFlood = a.solved ? 0 : a.flood;
         const displayTraffic = a.solved ? 0 : a.traffic;
 
@@ -84,19 +102,6 @@ function renderAreaCards() {
     }).join('');
 }
 
-function handleAreaCardClick(name) {
-    if (typeof selectArea === 'function') {
-        selectArea(name);
-    }
-    renderAreaCards();
-    
-    const panel = document.getElementById('problem-panel');
-    if (panel) {
-        const a = cityState.areas[name];
-        panel.innerHTML = `<strong>${name}</strong><br>Flood Severity: ${a.flood}/100<br>Traffic: ${a.traffic}/100`;
-    }
-}
-
 // =============================================================
 // QUICK-ACTION CHIPS
 // =============================================================
@@ -118,7 +123,7 @@ function appendChip(text) {
 // =============================================================
 // CORE LOGIC
 // =============================================================
-function selectArea(name) {
+function selectArea(name, fromUI = false) {
     const area = cityState.areas[name];
     if (area.solved) return; 
 
@@ -133,8 +138,13 @@ function selectArea(name) {
     
     document.getElementById('proposal-input').value = '';
     document.getElementById('advisor-container').style.display = 'none';
+    document.getElementById('draft-document').style.display = 'none';
     document.getElementById('what-if-result').style.display = 'none';
     document.getElementById('approve-btn').disabled = true;
+
+    if (!fromUI) {
+        renderAreaCards(); // Update cards if clicked via map pin
+    }
 }
 
 function evaluateProposal() {
@@ -155,63 +165,96 @@ function evaluateProposal() {
     
     const box = document.getElementById('advisor-response');
     const container = document.getElementById('advisor-container');
+    const draftBox = document.getElementById('draft-document');
     const avatar = document.getElementById('advisor-avatar');
-    container.style.display = 'block'; box.style.display = 'block';
+    const approveBtn = document.getElementById('approve-btn');
+    const stamp = document.getElementById('draft-stamp');
+
+    container.style.display = 'block'; 
+    box.style.display = 'block';
+    draftBox.style.display = 'none'; 
+    stamp.classList.remove('slam');
 
     if (matched && !area.solved) {
         currentProposal = matched;
-        box.innerHTML = `<span style="color:#4ade80">✅ Recommended</span><br>${matched.text}<br><em>Reason: recognized keyword matching proposal.</em>`;
-        document.getElementById('approve-btn').disabled = false;
-        avatar.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=10b981"; avatar.style.borderColor = "#10b981";
+        box.innerHTML = `<span style="color:#4ade80">✅ Draft prepared.</span> I have drafted a formal resolution for the ${cityState.selectedArea} area. Please review and sign below.`;
+        avatar.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=10b981"; 
+        avatar.style.borderColor = "#10b981";
+
+        // Populate Draft Document
+        document.getElementById('draft-subject').innerText = matched.text.split(':')[0];
+        document.getElementById('draft-cost').innerText = `₹${matched.cost} Crore`;
+        document.getElementById('draft-impact').innerText = `Reduce Flood Risk by ${matched.impact} points.`;
+        
+        draftBox.style.display = 'block';
+        approveBtn.disabled = false;
+
     } else if (area.solved) {
-        box.innerHTML = `<span style="color:#ef4444">⚠️ Already solved.</span>`; document.getElementById('approve-btn').disabled = true;
-        avatar.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=ef4444"; avatar.style.borderColor = "#ef4444";
+        box.innerHTML = `<span style="color:#ef4444">⚠️ Already solved.</span>`; 
+        approveBtn.disabled = true;
+        avatar.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=ef4444"; 
+        avatar.style.borderColor = "#ef4444";
     } else {
         currentProposal = null;
         box.innerHTML = `<span style="color:#facc15">🤔 Unrecognized idea.</span> Try words like "drainage", "metro", "park", or "road".`;
-        document.getElementById('approve-btn').disabled = true;
-        avatar.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=facc15"; avatar.style.borderColor = "#facc15";
+        approveBtn.disabled = true;
+        avatar.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=facc15"; 
+        avatar.style.borderColor = "#facc15";
     }
 }
 
 function approveProposal() {
     if (!currentProposal) return;
     const area = cityState.areas[cityState.selectedArea];
-    if (cityState.budget < currentProposal.cost) { document.getElementById('advisor-response').innerHTML = `<span style="color:#ef4444; font-weight:bold;">❌ INSUFFICIENT FUNDS!</span>`; return; }
+    if (cityState.budget < currentProposal.cost) { 
+        document.getElementById('advisor-response').innerHTML = `<span style="color:#ef4444; font-weight:bold;">❌ INSUFFICIENT FUNDS!</span>`; 
+        return; 
+    }
     
-    cityState.budget -= currentProposal.cost;
+    // 1. Play Stamp Animation
+    const stamp = document.getElementById('draft-stamp');
+    stamp.classList.add('slam');
     
-    // Force both stats to zero for solved areas
-    area.flood = 0; 
-    area.traffic = 0;
-    area.solved = true;
-    
-    let happinessBonus = 5; if (currentProposal.keywords.includes('park')) happinessBonus = 15; if (currentProposal.keywords.includes('drain')) happinessBonus = 10; if (currentProposal.keywords.includes('metro')) happinessBonus = 5;  
-    cityState.happiness = Math.min(100, cityState.happiness + happinessBonus);
-    
-    showFloatingText(`-₹${currentProposal.cost} Cr`, '#ef4444'); showFloatingText(`+${happinessBonus}% Happiness`, '#10b981');
-    
-    updateDashboard(); 
-    renderCityInfrastructure(); // Draw the new roads/metro on the map
-    saveGame();
-    
-    document.getElementById('approve-btn').disabled = true;
-    document.getElementById('advisor-response').innerHTML += `<br><br><span style="color:#4ade80">✔ Implemented! Budget: ₹${cityState.budget} Cr</span>`;
-    document.getElementById('proposal-input').value = '';
+    const approveBtn = document.getElementById('approve-btn');
+    approveBtn.disabled = true;
+    approveBtn.innerText = "Processing...";
 
-    checkWinCondition(); 
+    // 2. Apply Logic after stamp lands
+    setTimeout(() => {
+        cityState.budget -= currentProposal.cost;
+        area.flood = 0; 
+        area.traffic = 0;
+        area.solved = true;
+        
+        let happinessBonus = 5; 
+        if (currentProposal.keywords.includes('park')) happinessBonus = 15; 
+        if (currentProposal.keywords.includes('drain')) happinessBonus = 10; 
+        if (currentProposal.keywords.includes('metro')) happinessBonus = 5;  
+        cityState.happiness = Math.min(100, cityState.happiness + happinessBonus);
+        
+        showFloatingText(`-₹${currentProposal.cost} Cr`, '#ef4444'); 
+        showFloatingText(`+${happinessBonus}% Happiness`, '#10b981');
+        
+        updateDashboard(); 
+        renderCityInfrastructure();
+        saveGame();
+        
+        document.getElementById('advisor-response').innerHTML += `<br><br><span style="color:#4ade80">✔ Resolution signed! Budget: ₹${cityState.budget} Cr</span>`;
+        document.getElementById('proposal-input').value = '';
+        approveBtn.innerText = "✅ Implemented";
+
+        checkWinCondition(); 
+    }, 800); 
 }
 
 // =============================================================
 // DASHBOARD UPDATERS
 // =============================================================
 function updateDashboard() {
-    // Update the new UI features
     renderDonut();
     renderApproval();
     renderAreaCards();
 
-    // Achievements
     for (let name in cityState.areas) {
         if (cityState.areas[name].solved) {
             const badge = document.getElementById(`badge-${name.toLowerCase()}`);
@@ -222,7 +265,6 @@ function updateDashboard() {
         }
     }
 
-    // Map Markers (Now with Red Stamp)
     for (let name in cityState.areas) {
         if (cityState.areas[name].solved && mapMarkers[name]) {
             mapMarkers[name].setIcon(L.divIcon({
@@ -235,9 +277,6 @@ function updateDashboard() {
     }
 }
 
-/* =============================================================
-   RENDER BUDGET DONUT
-   ============================================================= */
 function renderDonut() {
     const remaining = cityState.budget;
     const total = 100;
@@ -270,14 +309,10 @@ function renderDonut() {
     if (legendSpent) legendSpent.textContent = '₹' + spent + ' Cr';
 }
 
-/* =============================================================
-   RENDER APPROVAL METER
-   ============================================================= */
 function renderApproval() {
     const h = cityState.happiness;
-
-    let emoji = '😐';
-    let color = '#facc15';
+    let emoji = '😐'; let color = '#facc15';
+    
     if (h < 40)      { emoji = '😡'; color = '#ef4444'; }
     else if (h < 60) { emoji = '😟'; color = '#f97316'; }
     else if (h < 75) { emoji = '😐'; color = '#facc15'; }
@@ -300,12 +335,10 @@ function renderApproval() {
         happinessEl.textContent = h + '%';
         happinessEl.style.color = color;
     }
-
     if (fill) {
         fill.style.width = h + '%';
         fill.style.background = color;
     }
-
     if (stars) {
         const filled = Math.round(h / 20);
         stars.textContent = '★'.repeat(filled) + '☆'.repeat(5 - filled);
@@ -325,41 +358,26 @@ function renderCityInfrastructure() {
     if (!infrastructureLayer) initInfrastructureLayer();
     if (!infrastructureLayer) return;
 
-    infrastructureLayer.clearLayers(); // Redraw from scratch
+    infrastructureLayer.clearLayers(); 
 
-    // --- VADAPALANI: METRO LINE ---
     if (cityState.areas['Vadapalani'].solved) {
-        const metroCoords = [
-            [13.0503, 80.2121], // Vadapalani
-            [13.0450, 80.2200], 
-            [13.0400, 80.2350],
-            [13.0350, 80.2500]
-        ];
+        const metroCoords = [ [13.0503, 80.2121], [13.0450, 80.2200], [13.0400, 80.2350], [13.0350, 80.2500] ];
         const metroLine = L.polyline(metroCoords, {
-            color: '#3b82f6', weight: 6, opacity: 0.9, dashArray: '10, 10',
-            lineCap: 'round', className: 'metro-line-anim'
+            color: '#3b82f6', weight: 6, opacity: 0.9, dashArray: '10, 10', lineCap: 'round', className: 'metro-line-anim'
         }).addTo(infrastructureLayer);
-        
         L.circleMarker([13.0503, 80.2121], { radius: 6, color: '#fff', weight: 2, fillColor: '#3b82f6', fillOpacity: 1 }).addTo(infrastructureLayer);
         metroLine.bindTooltip("🚇 New Metro Extension", { permanent: true, direction: "right", className: 'map-tooltip' });
     }
 
-    // --- VELACHERY: GREEN FLOOD PARK ---
     if (cityState.areas['Velachery'].solved) {
-        const parkCoords = [
-            [12.9800, 80.2150], [12.9780, 80.2210], [12.9720, 80.2220], [12.9710, 80.2160], [12.9750, 80.2130]
-        ];
+        const parkCoords = [ [12.9800, 80.2150], [12.9780, 80.2210], [12.9720, 80.2220], [12.9710, 80.2160], [12.9750, 80.2130] ];
         L.polygon(parkCoords, {
             color: '#10b981', weight: 2, fillColor: '#10b981', fillOpacity: 0.4, className: 'park-fade-in'
         }).addTo(infrastructureLayer).bindTooltip("🌳 Flood Absorption Park", { permanent: true, direction: "center", className: 'map-tooltip' });
     }
 
-    // --- PORUR: RING ROAD / HIGHWAY ---
     if (cityState.areas['Porur'].solved) {
-        const ringRoadCoords = [
-            [13.0358, 80.1568], [13.0450, 80.1400], [13.0600, 80.1450], 
-            [13.0700, 80.1600], [13.0600, 80.1800], [13.0400, 80.1800], [13.0358, 80.1568]
-        ];
+        const ringRoadCoords = [ [13.0358, 80.1568], [13.0450, 80.1400], [13.0600, 80.1450], [13.0700, 80.1600], [13.0600, 80.1800], [13.0400, 80.1800], [13.0358, 80.1568] ];
         L.polyline(ringRoadCoords, {
             color: '#f59e0b', weight: 8, opacity: 0.8, lineCap: 'round', lineJoin: 'round'
         }).addTo(infrastructureLayer).bindTooltip("🛣️ New Porur Bypass", { permanent: true, direction: "center", className: 'map-tooltip' });
@@ -373,16 +391,11 @@ function startExploration() {
     const container = document.getElementById('street-view-container');
     const bg = document.getElementById('street-view-bg');
     container.style.display = 'block';
-    
-    // Reset transform
     bg.style.transform = 'translate(0px, 0px) scale(1.1)';
 
-    // Add mouse move listener to pan the background
     container.onmousemove = (e) => {
-        const x = (e.clientX / window.innerWidth) * 2 - 1; 
+        const x = (e.clientX / window.innerWidth) * 2 - 1;
         const y = (e.clientY / window.innerHeight) * 2 - 1;
-        
-        // Move background to simulate 3D looking
         bg.style.transform = `translate(${x * -60}px, ${y * -30}px) scale(1.1)`;
     };
 }
@@ -394,47 +407,15 @@ function stopExploration() {
 
 function discoverProblem(areaName) {
     stopExploration();
-
-    const loc = locations.find(l => l.name === areaName);
-    if(loc) {
-        // Zoom map to location
-        map.flyTo(loc.coords, 15, { duration: 2 });
-    }
-
-    // Trigger selection
     handleAreaCardClick(areaName);
-
-    // Visual feedback
+    
     const panel = document.getElementById('problem-panel');
     if(panel) {
         panel.style.boxShadow = "0 0 20px rgba(239, 68, 68, 0.8)";
         setTimeout(() => { panel.style.boxShadow = "none"; }, 3000);
     }
-    
-    // Auto populate input
     document.getElementById('proposal-input').value = "Investigate and fix ";
     document.getElementById('proposal-input').focus();
-}
-
-// =============================================================
-// AMBIENT TRAFFIC
-// =============================================================
-function spawnTraffic() {
-    const emojis = ['🚙', '🚕', '🚌', '🚚', '🛵'];
-    for(let i=0; i<10; i++) {
-        const lat = 13.0500 + (Math.random() - 0.5) * 0.08;
-        const lng = 80.2100 + (Math.random() - 0.5) * 0.08;
-        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-        const rotation = Math.random() * 360;
-        
-        const carIcon = L.divIcon({ 
-            className: 'custom-div-icon', 
-            html: `<div style="font-size: 22px; opacity: 0.85; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5)); transform: rotate(${rotation}deg);">${emoji}</div>`, 
-            iconSize: [22, 22], iconAnchor: [11, 11]
-        });
-        const marker = L.marker([lat, lng], { icon: carIcon, zIndexOffset: 100 }).addTo(map);
-        ambientCars.push(marker);
-    }
 }
 
 // =============================================================
@@ -445,13 +426,10 @@ window.onload = function() {
     if (savedState) Object.assign(cityState, JSON.parse(savedState));
     
     initMap(); 
-    spawnTraffic(); // Add ambient cars
     initInfrastructureLayer();
-    renderCityInfrastructure(); // Draw saved infrastructure on load
+    renderCityInfrastructure();
+    updateDashboard();
     
-    updateDashboard(); 
-    
-    // Update hidden spans
     const budgetSpan = document.getElementById('budget');
     if(budgetSpan) budgetSpan.innerText = `₹${cityState.budget} Cr`;
     const happSpan = document.getElementById('happiness');
@@ -488,6 +466,9 @@ function initMap() {
         const customIcon = L.divIcon({ className: 'custom-div-icon', html: `<div class='map-marker'>📍 ${loc.name}</div>`, iconSize: [100, 30], iconAnchor: [50, 15] });
         const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
         mapMarkers[loc.name] = marker;
-        marker.on('click', function() { handleAreaCardClick(loc.name); });
+        marker.on('click', function() { 
+            selectArea(loc.name); 
+            renderAreaCards();
+        });
     });
 }
