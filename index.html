@@ -162,6 +162,32 @@
         <button class="action" id="approve-btn" onclick="approveProposal()" disabled>✍️ Sign & Approve Resolution</button>
     </div>
 
+    <!-- NEW: CITY PROBLEM ALERT POPUP -->
+    <div id="problem-alert-modal" class="game-modal">
+        <div class="modal-content" style="border-color: #ef4444; max-width: 450px;">
+            <h2 id="alert-city-name" style="color: #ef4444; margin-bottom: 5px;">🚨 CITY ALERT</h2>
+            <p style="color: #cbd5e1; font-size: 13px; margin-bottom: 20px;">The following infrastructure issues require your immediate attention:</p>
+            
+            <div class="alert-issue-box" style="border-left: 4px solid #3b82f6;">
+                <span style="font-size: 24px;">🌊</span>
+                <div>
+                    <strong style="color: #f8fafc; font-size: 14px;">Flooding Report</strong>
+                    <p id="alert-flood-text" style="color: #94a3b8; font-size: 12px; margin-top: 4px;">Severity: 45/100</p>
+                </div>
+            </div>
+
+            <div class="alert-issue-box" style="border-left: 4px solid #f59e0b;">
+                <span style="font-size: 24px;">🚦</span>
+                <div>
+                    <strong style="color: #f8fafc; font-size: 14px;">Traffic Report</strong>
+                    <p id="alert-traffic-text" style="color: #94a3b8; font-size: 12px; margin-top: 4px;">Severity: 70/100</p>
+                </div>
+            </div>
+
+            <button class="action" style="background: #3b82f6; margin-top: 20px;" onclick="closeProblemAlert()">I Understand. Let's Fix It!</button>
+        </div>
+    </div>
+
     <!-- FULL SCREEN STREET VIEW (STREETQUEST) -->
     <div id="street-view-container">
         <div id="street-view-bg"></div>
