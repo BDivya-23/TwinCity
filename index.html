@@ -16,10 +16,8 @@
     <div id="map"></div>
     <div id="rain-overlay"></div>
 
-    <!-- NEW: FLOATING CITY REPORT TOAST -->
-    <div id="city-toast">
-        <!-- Content injected by JS -->
-    </div>
+    <!-- FLOATING CITY REPORT TOAST -->
+    <div id="city-toast"></div>
 
     <div id="dashboard">
         <h1>🏛️ Mayor Dashboard</h1>
@@ -99,9 +97,6 @@
             <div id="badge-besantnagar" class="badge-locked" title="Besant Nagar">🏝️</div>
         </div>
 
-        <h2>StreetQuest Mode</h2>
-        <button class="action" style="background: #f59e0b; color: #000; font-weight: 800; margin-bottom: 15px;" onclick="startExploration()">🕵️ Explore Chennai Streets</button>
-
         <div style="display: flex; justify-content: space-between; align-items: center; margin: 25px 0 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
             <h2 style="margin: 0; border: none; padding: 0;">City Zones</h2>
             <span id="goal-counter" style="font-size: 12px; font-weight: bold; color: #f59e0b; background: rgba(245, 158, 11, 0.2); padding: 4px 8px; border-radius: 12px; border: 1px solid #f59e0b;">Saved: 0 / 10</span>
@@ -156,26 +151,6 @@
         </div>
 
         <button class="action" id="approve-btn" onclick="approveProposal()" disabled>✍️ Sign & Approve Resolution</button>
-    </div>
-
-    <!-- FULL SCREEN STREET VIEW (STREETQUEST) -->
-    <div id="street-view-container">
-        <div id="street-view-bg"></div>
-        
-        <div class="hotspot" onclick="discoverProblem('Porur')" style="top: 60%; left: 30%;">
-            <div class="ping"></div>
-            <div class="hotspot-label">🚧 Pothole Detected</div>
-        </div>
-        <div class="hotspot" onclick="discoverProblem('Velachery')" style="top: 40%; left: 70%;">
-            <div class="ping"></div>
-            <div class="hotspot-label">🌊 Waterlogging</div>
-        </div>
-        <div class="hotspot" onclick="discoverProblem('Vadapalani')" style="top: 50%; left: 50%;">
-            <div class="ping"></div>
-            <div class="hotspot-label">🚦 Traffic Jam</div>
-        </div>
-
-        <button class="action" style="position: absolute; top: 80px; right: 30px; width: auto; background: #ef4444; z-index: 10000; padding: 10px 20px; font-size: 16px;" onclick="stopExploration()">🛑 Exit Street View</button>
     </div>
 
     <!-- VICTORY SCREEN -->
