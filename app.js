@@ -1,8 +1,8 @@
 // === STATE ===
-const GAME_VERSION = "1.0.15"; // Version control to force update old saves
+const GAME_VERSION = "1.0.18"; // Version control to force cache clear
 
 const cityState = {
-    budget: 400, happiness: 65, selectedArea: null,
+    budget: 200, happiness: 65, selectedArea: null,
     areas: {
         Velachery:  { flood: 80, traffic: 60, solved: false },
         Vadapalani: { flood: 35, traffic: 75, solved: false },
@@ -14,7 +14,6 @@ const cityState = {
         Koyambedu:  { flood: 40, traffic: 80, solved: false },
         "Tidel Park": { flood: 70, traffic: 50, solved: false },
         Tambaram:   { flood: 50, traffic: 75, solved: false },
-        // NEW 5 CITIES
         Adyar:      { flood: 45, traffic: 65, solved: false },
         Guindy:     { flood: 30, traffic: 85, solved: false },
         Chromepet:  { flood: 60, traffic: 55, solved: false },
@@ -275,14 +274,27 @@ function updateDashboard() {
     renderApproval();
     renderAreaCards();
 
+    let solvedCount = 0;
     for (let name in cityState.areas) {
         if (cityState.areas[name].solved) {
+            solvedCount++;
             const safeName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
             const badge = document.getElementById(`badge-${safeName}`);
             if (badge) {
                 badge.classList.remove('badge-locked');
                 badge.classList.add('badge-unlocked');
             }
+        }
+    }
+
+    // Update Goal Counter
+    const goalCounter = document.getElementById('goal-counter');
+    if (goalCounter) {
+        goalCounter.innerText = `Saved: ${solvedCount} / 10`;
+        if (solvedCount >= 10) {
+            goalCounter.style.color = '#10b981';
+            goalCounter.style.borderColor = '#10b981';
+            goalCounter.style.background = 'rgba(16, 185, 129, 0.2)';
         }
     }
 
@@ -300,7 +312,7 @@ function updateDashboard() {
 
 function renderDonut() {
     const remaining = cityState.budget;
-    const total = 400; 
+    const total = 200; // Updated to match new starting budget
     const spent = Math.max(0, total - remaining);
     const circumference = 2 * Math.PI * 50;
 
@@ -321,7 +333,7 @@ function renderDonut() {
     const amountEl = document.getElementById('donut-amount');
     if (amountEl) {
         amountEl.textContent = '₹' + remaining;
-        amountEl.style.color = remaining < 50 ? '#ef4444' : '#10b981';
+        amountEl.style.color = remaining < 40 ? '#ef4444' : '#10b981';
     }
 
     const legendRem = document.getElementById('legend-remaining');
@@ -421,8 +433,6 @@ function renderCityInfrastructure() {
         const tambaramCoords = [ [12.9200, 80.1200], [12.9250, 80.1250], [12.9300, 80.1300] ];
         L.polyline(tambaramCoords, { color: '#3b82f6', weight: 6, opacity: 0.9, dashArray: '10, 10' }).addTo(infrastructureLayer).bindTooltip("🚆 Tambaram Rail Upgrade", { permanent: true, direction: "right", className: 'map-tooltip' });
     }
-
-    // NEW CITIES
     if (cityState.areas['Adyar'].solved) {
         const adyarCoords = [ [13.0067, 80.2570], [13.0100, 80.2600] ];
         L.polyline(adyarCoords, { color: '#3b82f6', weight: 6, opacity: 0.9 }).addTo(infrastructureLayer).bindTooltip("🌉 Adyar Bridge", { permanent: true, direction: "right", className: 'map-tooltip' });
@@ -483,14 +493,12 @@ function discoverProblem(areaName) {
 // INITIALIZATION & HELPERS
 // =============================================================
 window.onload = function() {
-    // VERSION CONTROL FIX: Clear old saves that don't have the 15 cities
     const savedState = localStorage.getItem('twinCityState');
     if (savedState) {
         const parsed = JSON.parse(savedState);
         if (parsed.version === GAME_VERSION) {
             Object.assign(cityState, parsed);
         } else {
-            console.log("Old save file detected. Resetting to 15 cities...");
             localStorage.removeItem('twinCityState');
         }
     }
@@ -516,10 +524,20 @@ window.onload = function() {
 };
 
 function saveGame() { 
-    cityState.version = GAME_VERSION; // Save the version number
+    cityState.version = GAME_VERSION; 
     localStorage.setItem('twinCityState', JSON.stringify(cityState)); 
 }
-function checkWinCondition() { if (Object.values(cityState.areas).every(a => a.solved)) { setTimeout(() => { document.getElementById('victory-screen').style.display = 'flex'; }, 1000); } }
+
+// UPDATED WIN CONDITION: Must save 10 cities
+function checkWinCondition() { 
+    const solvedCount = Object.values(cityState.areas).filter(a => a.solved).length;
+    if (solvedCount >= 10) { 
+        setTimeout(() => { 
+            document.getElementById('victory-screen').style.display = 'flex'; 
+        }, 1000); 
+    } 
+}
+
 function resetGame() { localStorage.removeItem('twinCityState'); location.reload(); }
 function showFloatingText(text, color) { const el = document.createElement('div'); el.className = 'floating-text'; el.textContent = text; el.style.color = color; el.style.left = '60%'; el.style.top = '40%'; document.body.appendChild(el); setTimeout(() => el.remove(), 1500); }
 
