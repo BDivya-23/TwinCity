@@ -26,61 +26,58 @@
             </div>
         </div>
 
-                    <h2>City Status</h2>
+        <h2>City Status</h2>
 
-            <!-- BUDGET DONUT -->
-            <div id="budget-section">
-                <div id="budget-donut-wrap">
-                    <svg id="budget-donut" viewBox="0 0 120 120" width="120" height="120">
-                        <!-- Background ring -->
-                        <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="12"/>
-                        <!-- Spent segment (red) -->
-                        <circle id="donut-spent" cx="60" cy="60" r="50" fill="none" stroke="#ef4444" stroke-width="12"
-                                stroke-dasharray="0 314.16" stroke-linecap="round" transform="rotate(-90 60 60)"
-                                style="transition: stroke-dasharray 0.6s ease;"/>
-                        <!-- Remaining segment (green) -->
-                        <circle id="donut-remaining" cx="60" cy="60" r="50" fill="none" stroke="#10b981" stroke-width="12"
-                                stroke-dasharray="314.16 314.16" stroke-linecap="round" transform="rotate(-90 60 60)"
-                                style="transition: stroke-dasharray 0.6s ease;"/>
-                    </svg>
-                    <div id="donut-center">
-                        <div id="donut-amount">₹100</div>
-                        <div id="donut-sub">Cr left</div>
-                    </div>
-                </div>
-                <div id="budget-legend">
-                    <div class="legend-row">
-                        <span class="legend-dot" style="background:#10b981;"></span>
-                        <span>Remaining</span>
-                        <strong id="legend-remaining">₹100 Cr</strong>
-                    </div>
-                    <div class="legend-row">
-                        <span class="legend-dot" style="background:#ef4444;"></span>
-                        <span>Spent</span>
-                        <strong id="legend-spent">₹0 Cr</strong>
-                    </div>
-                    <!-- Hidden spans keep old app.js working -->
-                    <span id="budget" style="display:none;">₹100 Cr</span>
-                    <div id="budget-bar" style="display:none;"></div>
+        <!-- BUDGET DONUT -->
+        <div id="budget-section">
+            <div id="budget-donut-wrap">
+                <svg id="budget-donut" viewBox="0 0 120 120" width="120" height="120">
+                    <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="12"/>
+                    <circle id="donut-spent" cx="60" cy="60" r="50" fill="none" stroke="#ef4444" stroke-width="12"
+                            stroke-dasharray="0 314.16" stroke-linecap="round" transform="rotate(-90 60 60)"
+                            style="transition: stroke-dasharray 0.6s ease;"/>
+                    <circle id="donut-remaining" cx="60" cy="60" r="50" fill="none" stroke="#10b981" stroke-width="12"
+                            stroke-dasharray="314.16 314.16" stroke-linecap="round" transform="rotate(-90 60 60)"
+                            style="transition: stroke-dasharray 0.6s ease;"/>
+                </svg>
+                <div id="donut-center">
+                    <div id="donut-amount">₹100</div>
+                    <div id="donut-sub">Cr left</div>
                 </div>
             </div>
+            <div id="budget-legend">
+                <div class="legend-row">
+                    <span class="legend-dot" style="background:#10b981;"></span>
+                    <span>Remaining</span>
+                    <strong id="legend-remaining">₹100 Cr</strong>
+                </div>
+                <div class="legend-row">
+                    <span class="legend-dot" style="background:#ef4444;"></span>
+                    <span>Spent</span>
+                    <strong id="legend-spent">₹0 Cr</strong>
+                </div>
+                <!-- Hidden spans keep old app.js working -->
+                <span id="budget" style="display:none;">₹100 Cr</span>
+                <div id="budget-bar" style="display:none;"></div>
+            </div>
+        </div>
 
-            <!-- ANIMATED APPROVAL METER -->
-            <div id="approval-section">
-                <div id="approval-header">
-                    <div id="approval-emoji">🙂</div>
-                    <div id="approval-text">
-                        <div class="approval-title">Citizen Approval</div>
-                        <div id="approval-percent-line">
-                            <span id="happiness">85%</span>
-                            <span id="star-rating">⭐⭐⭐⭐☆</span>
-                        </div>
+        <!-- ANIMATED APPROVAL METER -->
+        <div id="approval-section">
+            <div id="approval-header">
+                <div id="approval-emoji">🙂</div>
+                <div id="approval-text">
+                    <div class="approval-title">Citizen Approval</div>
+                    <div id="approval-percent-line">
+                        <span id="happiness">85%</span>
+                        <span id="star-rating">⭐⭐⭐⭐☆</span>
                     </div>
                 </div>
-                <div class="approval-track">
-                    <div id="happiness-bar" class="approval-fill" style="width:85%;"></div>
-                </div>
             </div>
+            <div class="approval-track">
+                <div id="happiness-bar" class="approval-fill" style="width:85%;"></div>
+            </div>
+        </div>
 
         <!-- Achievements Badges -->
         <h2>Achievements</h2>
@@ -89,6 +86,10 @@
             <div id="badge-vadapalani" class="badge-locked" title="Fix Vadapalani Traffic">🚦</div>
             <div id="badge-porur" class="badge-locked" title="Fix Porur Traffic">🏗️</div>
         </div>
+
+        <!-- NEW: STREET EXPLORATION BUTTON -->
+        <h2>StreetQuest Mode</h2>
+        <button class="action" style="background: #f59e0b; color: #000; font-weight: 800; margin-bottom: 15px;" onclick="startExploration()">🕵️ Explore Chennai Streets</button>
 
         <!-- Per-Area Mini-Cards -->
         <h2>City Zones</h2>
@@ -118,35 +119,60 @@
 
         <button class="action" onclick="evaluateProposal()">🔍 Evaluate Proposal</button>
         
-                   <!-- ADVISOR CHAT & DRAFT SYSTEM -->
-            <div id="advisor-container" style="display:none; margin-top: 15px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-                <div style="display: flex; gap: 15px; align-items: flex-start;">
-                    <img id="advisor-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=3b82f6" style="width: 55px; height: 55px; border-radius: 50%; border: 2px solid #3b82f6; background: #0f172a; flex-shrink: 0;">
-                    <div id="advisor-response" style="flex: 1; margin: 0; padding: 0; background: transparent; border: none; font-size: 13px; line-height: 1.6;"></div>
+        <!-- ADVISOR CHAT & DRAFT SYSTEM -->
+        <div id="advisor-container" style="display:none; margin-top: 15px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; gap: 15px; align-items: flex-start;">
+                <img id="advisor-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=3b82f6" style="width: 55px; height: 55px; border-radius: 50%; border: 2px solid #3b82f6; background: #0f172a; flex-shrink: 0;">
+                <div id="advisor-response" style="flex: 1; margin: 0; padding: 0; background: transparent; border: none; font-size: 13px; line-height: 1.6;"></div>
+            </div>
+        </div>
+
+        <!-- THE OFFICIAL DRAFT DOCUMENT -->
+        <div id="draft-document" style="display: none;">
+            <div class="draft-paper">
+                <div class="draft-header">
+                    <span>🏛️ CITY OF CHENNAI</span>
+                    <span>OFFICIAL RESOLUTION</span>
+                </div>
+                <div class="draft-body">
+                    <p><strong>TO:</strong> Mayor's Office</p>
+                    <p><strong>SUBJECT:</strong> <span id="draft-subject"></span></p>
+                    <p><strong>COST:</strong> <span id="draft-cost"></span></p>
+                    <p><strong>IMPACT:</strong> <span id="draft-impact"></span></p>
+                </div>
+                <div class="draft-footer">
+                    <span>Status: PENDING SIGNATURE</span>
+                    <div class="stamp" id="draft-stamp">APPROVED</div>
                 </div>
             </div>
+        </div>
 
-            <!-- THE OFFICIAL DRAFT DOCUMENT -->
-            <div id="draft-document" style="display: none;">
-                <div class="draft-paper">
-                    <div class="draft-header">
-                        <span>🏛️ CITY OF CHENNAI</span>
-                        <span>OFFICIAL RESOLUTION</span>
-                    </div>
-                    <div class="draft-body">
-                        <p><strong>TO:</strong> Mayor's Office</p>
-                        <p><strong>SUBJECT:</strong> <span id="draft-subject"></span></p>
-                        <p><strong>COST:</strong> <span id="draft-cost"></span></p>
-                        <p><strong>IMPACT:</strong> <span id="draft-impact"></span></p>
-                    </div>
-                    <div class="draft-footer">
-                        <span>Status: PENDING SIGNATURE</span>
-                        <div class="stamp" id="draft-stamp">APPROVED</div>
-                    </div>
-                </div>
-            </div>
+        <button class="action" id="approve-btn" onclick="approveProposal()" disabled>✍️ Sign & Approve Resolution</button>
+    </div>
 
-            <button class="action" id="approve-btn" onclick="approveProposal()" disabled>✍️ Sign & Approve Resolution</button>
+    <!-- FULL SCREEN STREET VIEW (STREETQUEST) -->
+    <div id="street-view-container">
+        <div id="street-view-bg"></div>
+        
+        <!-- Hidden Problem Hotspots -->
+        <div class="hotspot" onclick="discoverProblem('Porur')" style="top: 60%; left: 30%;">
+            <div class="ping"></div>
+            <div class="hotspot-label">🚧 Pothole Detected</div>
+        </div>
+
+        <div class="hotspot" onclick="discoverProblem('Velachery')" style="top: 40%; left: 70%;">
+            <div class="ping"></div>
+            <div class="hotspot-label">🌊 Waterlogging</div>
+        </div>
+
+        <div class="hotspot" onclick="discoverProblem('Vadapalani')" style="top: 50%; left: 50%;">
+            <div class="ping"></div>
+            <div class="hotspot-label">🚦 Traffic Jam</div>
+        </div>
+
+        <!-- Exit Button -->
+        <button class="action" style="position: absolute; top: 80px; right: 30px; width: auto; background: #ef4444; z-index: 10000; padding: 10px 20px; font-size: 16px;" onclick="stopExploration()">🛑 Exit Street View</button>
+    </div>
 
     <!-- VICTORY SCREEN -->
     <div id="victory-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(10, 22, 40, 0.95); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(10px);">
