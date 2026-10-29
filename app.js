@@ -26,24 +26,8 @@ let map;
 let mapMarkers = {}; 
 let ambientCars = []; 
 
-// === ANIMATED NUMBERS HELPER ===
-function animateValue(id, start, end, duration, prefix = "", suffix = "") {
-    const obj = document.getElementById(id);
-    let startTimestamp = null;
-    const step = (timestamp) => {
-        if (!startTimestamp) startTimestamp = timestamp;
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-        const current = Math.floor(progress * (end - start) + start);
-        obj.innerHTML = prefix + current + suffix;
-        if (progress < 1) {
-            window.requestAnimationFrame(step);
-        }
-    };
-    window.requestAnimationFrame(step);
-}
-
 // =============================================================
-// PER-AREA MINI-CARDS (With Red Approved Stamp)
+// PER-AREA MINI-CARDS
 // =============================================================
 function renderAreaCards() {
     const container = document.getElementById('area-cards-container');
@@ -112,6 +96,9 @@ function handleAreaCardClick(name) {
     }
 }
 
+// =============================================================
+// QUICK-ACTION CHIPS
+// =============================================================
 function appendChip(text) {
     const input = document.getElementById('proposal-input');
     if (!input) return;
@@ -127,7 +114,9 @@ function appendChip(text) {
     input.setSelectionRange(input.value.length, input.value.length);
 }
 
-// === CORE LOGIC ===
+// =============================================================
+// CORE LOGIC
+// =============================================================
 function selectArea(name) {
     const area = cityState.areas[name];
     if (area.solved) return; 
@@ -189,11 +178,11 @@ function approveProposal() {
     const area = cityState.areas[cityState.selectedArea];
     if (cityState.budget < currentProposal.cost) { document.getElementById('advisor-response').innerHTML = `<span style="color:#ef4444; font-weight:bold;">❌ INSUFFICIENT FUNDS!</span>`; return; }
     
-    const oldBudget = cityState.budget;
-    const oldHappiness = cityState.happiness;
-
     cityState.budget -= currentProposal.cost;
-    area.flood = Math.max(0, area.flood - currentProposal.impact);
+    
+    // Force both stats to zero for solved areas
+    area.flood = 0; 
+    area.traffic = 0;
     area.solved = true;
     
     let happinessBonus = 5; if (currentProposal.keywords.includes('park')) happinessBonus = 15; if (currentProposal.keywords.includes('drain')) happinessBonus = 10; if (currentProposal.keywords.includes('metro')) happinessBonus = 5;  
@@ -201,29 +190,24 @@ function approveProposal() {
     
     showFloatingText(`-₹${currentProposal.cost} Cr`, '#ef4444'); showFloatingText(`+${happinessBonus}% Happiness`, '#10b981');
     
-    animateValue('budget', oldBudget, cityState.budget, 1000, "₹", " Cr");
-    animateValue('happiness', oldHappiness, cityState.happiness, 1000, "", "%");
-
     updateDashboard(); 
     saveGame();
     
     document.getElementById('approve-btn').disabled = true;
     document.getElementById('advisor-response').innerHTML += `<br><br><span style="color:#4ade80">✔ Implemented! Budget: ₹${cityState.budget} Cr</span>`;
-    
     document.getElementById('proposal-input').value = '';
 
     checkWinCondition(); 
 }
 
+// =============================================================
+// DASHBOARD UPDATERS
+// =============================================================
 function updateDashboard() {
-    // Progress bars
-    document.getElementById('budget-bar').style.width = `${(cityState.budget / 100) * 100}%`;
-    if (cityState.budget < 30) document.getElementById('budget-bar').style.background = '#ef4444';
-    document.getElementById('happiness-bar').style.width = `${cityState.happiness}%`;
-    
-    // Star rating
-    const stars = Math.round(cityState.happiness / 20); 
-    document.getElementById('star-rating').innerHTML = "⭐".repeat(stars) + "☆".repeat(5 - stars);
+    // Update the new UI features
+    renderDonut();
+    renderApproval();
+    renderAreaCards();
 
     // Achievements
     for (let name in cityState.areas) {
@@ -247,11 +231,88 @@ function updateDashboard() {
             }));
         }
     }
-
-    renderAreaCards();
 }
 
-// === INITIALIZATION & HELPERS ===
+/* =============================================================
+   RENDER BUDGET DONUT
+   ============================================================= */
+function renderDonut() {
+    const remaining = cityState.budget;
+    const total = 100;
+    const spent = Math.max(0, total - remaining);
+    const circumference = 2 * Math.PI * 50;
+
+    const remainingLen = (remaining / total) * circumference;
+    const spentLen = (spent / total) * circumference;
+
+    const remainingCircle = document.getElementById('donut-remaining');
+    const spentCircle = document.getElementById('donut-spent');
+
+    if (remainingCircle) {
+        remainingCircle.setAttribute('stroke-dasharray', `${remainingLen} ${circumference - remainingLen}`);
+        remainingCircle.setAttribute('stroke-dashoffset', `${-spentLen}`);
+    }
+    if (spentCircle) {
+        spentCircle.setAttribute('stroke-dasharray', `${spentLen} ${circumference - spentLen}`);
+    }
+
+    const amountEl = document.getElementById('donut-amount');
+    if (amountEl) {
+        amountEl.textContent = '₹' + remaining;
+        amountEl.style.color = remaining < 30 ? '#ef4444' : '#10b981';
+    }
+
+    const legendRem = document.getElementById('legend-remaining');
+    const legendSpent = document.getElementById('legend-spent');
+    if (legendRem) legendRem.textContent = '₹' + remaining + ' Cr';
+    if (legendSpent) legendSpent.textContent = '₹' + spent + ' Cr';
+}
+
+/* =============================================================
+   RENDER APPROVAL METER
+   ============================================================= */
+function renderApproval() {
+    const h = cityState.happiness;
+
+    let emoji = '😐';
+    let color = '#facc15';
+    if (h < 40)      { emoji = '😡'; color = '#ef4444'; }
+    else if (h < 60) { emoji = '😟'; color = '#f97316'; }
+    else if (h < 75) { emoji = '😐'; color = '#facc15'; }
+    else if (h < 90) { emoji = '🙂'; color = '#3b82f6'; }
+    else             { emoji = '😄'; color = '#10b981'; }
+
+    const emojiEl = document.getElementById('approval-emoji');
+    const happinessEl = document.getElementById('happiness');
+    const fill = document.getElementById('happiness-bar');
+    const stars = document.getElementById('star-rating');
+
+    if (emojiEl && emojiEl.textContent !== emoji) {
+        emojiEl.textContent = emoji;
+        emojiEl.classList.remove('bump');
+        void emojiEl.offsetWidth;
+        emojiEl.classList.add('bump');
+    }
+
+    if (happinessEl) {
+        happinessEl.textContent = h + '%';
+        happinessEl.style.color = color;
+    }
+
+    if (fill) {
+        fill.style.width = h + '%';
+        fill.style.background = color;
+    }
+
+    if (stars) {
+        const filled = Math.round(h / 20);
+        stars.textContent = '★'.repeat(filled) + '☆'.repeat(5 - filled);
+    }
+}
+
+// =============================================================
+// INITIALIZATION & HELPERS
+// =============================================================
 window.onload = function() {
     const savedState = localStorage.getItem('twinCityState');
     if (savedState) Object.assign(cityState, JSON.parse(savedState));
@@ -260,8 +321,11 @@ window.onload = function() {
     spawnTraffic(); 
     updateDashboard(); 
     
-    document.getElementById('budget').innerText = `₹${cityState.budget} Cr`;
-    document.getElementById('happiness').innerText = `${cityState.happiness}%`;
+    // Update hidden spans
+    const budgetSpan = document.getElementById('budget');
+    if(budgetSpan) budgetSpan.innerText = `₹${cityState.budget} Cr`;
+    const happSpan = document.getElementById('happiness');
+    if(happSpan) happSpan.innerText = `${cityState.happiness}%`;
 
     const unsolved = Object.keys(cityState.areas).find(k => !cityState.areas[k].solved);
     if(unsolved) handleAreaCardClick(unsolved);
@@ -313,88 +377,5 @@ function spawnTraffic() {
         });
         const marker = L.marker([lat, lng], { icon: carIcon, zIndexOffset: 100 }).addTo(map);
         ambientCars.push(marker);
-    }
-}
-/* =============================================================
-   RENDER BUDGET DONUT
-   ============================================================= */
-function renderDonut() {
-    const remaining = cityState.budget;
-    const total = 100;
-    const spent = Math.max(0, total - remaining);
-    const circumference = 2 * Math.PI * 50; // r = 50 → ~314.16
-
-    const remainingLen = (remaining / total) * circumference;
-    const spentLen = (spent / total) * circumference;
-
-    const remainingCircle = document.getElementById('donut-remaining');
-    const spentCircle = document.getElementById('donut-spent');
-
-    if (remainingCircle) {
-        remainingCircle.setAttribute('stroke-dasharray', `${remainingLen} ${circumference - remainingLen}`);
-        remainingCircle.setAttribute('stroke-dashoffset', `${-spentLen}`);
-    }
-    if (spentCircle) {
-        spentCircle.setAttribute('stroke-dasharray', `${spentLen} ${circumference - spentLen}`);
-    }
-
-    // Center text
-    const amountEl = document.getElementById('donut-amount');
-    if (amountEl) {
-        amountEl.textContent = '₹' + remaining;
-        amountEl.style.color = remaining < 30 ? '#ef4444' : '#10b981';
-    }
-
-    // Legend
-    const legendRem = document.getElementById('legend-remaining');
-    const legendSpent = document.getElementById('legend-spent');
-    if (legendRem) legendRem.textContent = '₹' + remaining + ' Cr';
-    if (legendSpent) legendSpent.textContent = '₹' + spent + ' Cr';
-}
-
-/* =============================================================
-   RENDER APPROVAL METER
-   ============================================================= */
-function renderApproval() {
-    const h = cityState.happiness;
-
-    // Determine Emoji and Color based on happiness
-    let emoji = '😐';
-    let color = '#facc15';
-    if (h < 40)      { emoji = '😡'; color = '#ef4444'; }
-    else if (h < 60) { emoji = '😟'; color = '#f97316'; }
-    else if (h < 75) { emoji = '😐'; color = '#facc15'; }
-    else if (h < 90) { emoji = '🙂'; color = '#3b82f6'; }
-    else             { emoji = '😄'; color = '#10b981'; }
-
-    const emojiEl = document.getElementById('approval-emoji');
-    const happinessEl = document.getElementById('happiness');
-    const fill = document.getElementById('happiness-bar');
-    const stars = document.getElementById('star-rating');
-
-    // Update Emoji (with bounce animation if it changed)
-    if (emojiEl && emojiEl.textContent !== emoji) {
-        emojiEl.textContent = emoji;
-        emojiEl.classList.remove('bump');
-        void emojiEl.offsetWidth; // Trigger reflow to restart CSS animation
-        emojiEl.classList.add('bump');
-    }
-
-    // Update % Text and Color
-    if (happinessEl) {
-        happinessEl.textContent = h + '%';
-        happinessEl.style.color = color;
-    }
-
-    // Update Bar Width and Color
-    if (fill) {
-        fill.style.width = h + '%';
-        fill.style.background = color;
-    }
-
-    // Update Stars (1 star per 20%)
-    if (stars) {
-        const filled = Math.round(h / 20);
-        stars.textContent = '★'.repeat(filled) + '☆'.repeat(5 - filled);
     }
 }
