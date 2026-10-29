@@ -1,6 +1,6 @@
 // === STATE ===
 const cityState = {
-    budget: 400, happiness: 65, selectedArea: null, // Increased budget for 15 areas
+    budget: 400, happiness: 65, selectedArea: null,
     areas: {
         Velachery:  { flood: 80, traffic: 60, solved: false },
         Vadapalani: { flood: 35, traffic: 75, solved: false },
@@ -521,7 +521,7 @@ function simulateWhatIf(type) {
 }
 
 function initMap() {
-    map = L.map('map', { dragging: true, zoomControl: true }).setView([13.0500, 80.2100], 11); // Slightly zoomed out start
+    map = L.map('map', { dragging: true, zoomControl: true }).setView([13.0500, 80.2100], 11);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
     
     locations.forEach(loc => {
