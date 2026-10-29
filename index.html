@@ -27,7 +27,7 @@
         </div>
 
         <h2>City Status</h2>
-        
+
         <!-- BUDGET DONUT -->
         <div id="budget-section">
             <div id="budget-donut-wrap">
@@ -78,7 +78,7 @@
             </div>
         </div>
 
-        <!-- Achievements -->
+        <!-- Achievements Badges -->
         <h2>Achievements</h2>
         <div id="achievements-container" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
             <div id="badge-velachery" class="badge-locked" title="Fix Velachery Flooding">🌊</div>
@@ -86,9 +86,9 @@
             <div id="badge-porur" class="badge-locked" title="Fix Porur Traffic">🏗️</div>
         </div>
 
-        <!-- StreetQuest Mode -->
-        <h2>StreetQuest Mode</h2>
-        <button class="action" style="background: #f59e0b; color: #000; font-weight: 800; margin-bottom: 15px;" onclick="startExploration()">🕵️ Explore Chennai Streets</button>
+        <!-- STREET HERO BUTTON -->
+        <h2>Street Hero Mode</h2>
+        <button class="action" style="background: #f59e0b; color: #000; font-weight: 800; margin-bottom: 15px;" onclick="startStreetHero()">🦸 Start Street Hero Mode</button>
 
         <!-- Per-Area Mini-Cards -->
         <h2>City Zones</h2>
@@ -103,10 +103,11 @@
             <button class="action" style="margin-top:0; background: #10b981; color: white !important; font-size: 14px;" onclick="simulateWhatIf('drainage')">🌊 Fix Drainage</button>
         </div>
         <div id="what-if-result" style="display:none; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; font-size: 13px; margin-bottom: 15px; border-left: 4px solid #3b82f6;"></div>
-
+        
         <h2>Propose a Solution</h2>
         <textarea id="proposal-input" placeholder="e.g., Build a new drainage system..."></textarea>
-        
+
+        <!-- Quick-Action Chips -->
         <div id="quick-chips">
             <button class="chip" onclick="appendChip('drainage system')">🌊 Drainage</button>
             <button class="chip" onclick="appendChip('metro extension')">🚇 Metro</button>
@@ -114,8 +115,9 @@
             <button class="chip" onclick="appendChip('road repair')">🛣️ Road Repair</button>
             <button class="chip" onclick="appendChip('flood prevention')">🚧 Flood Control</button>
         </div>
-        <button class="action" onclick="evaluateProposal()">🔍 Evaluate Proposal</button>
 
+        <button class="action" onclick="evaluateProposal()">🔍 Evaluate Proposal</button>
+        
         <!-- ADVISOR CHAT & DRAFT SYSTEM -->
         <div id="advisor-container" style="display:none; margin-top: 15px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
             <div style="display: flex; gap: 15px; align-items: flex-start;">
@@ -147,24 +149,48 @@
         <button class="action" id="approve-btn" onclick="approveProposal()" disabled>✍️ Sign & Approve Resolution</button>
     </div>
 
-    <!-- FULL SCREEN STREET VIEW (STREETQUEST) -->
-    <div id="street-view-container">
-        <div id="street-view-bg"></div>
-        
-        <div class="hotspot" onclick="discoverProblem('Porur')" style="top: 60%; left: 30%;">
-            <div class="ping"></div>
-            <div class="hotspot-label">🚧 Pothole Detected</div>
-        </div>
-        <div class="hotspot" onclick="discoverProblem('Velachery')" style="top: 40%; left: 70%;">
-            <div class="ping"></div>
-            <div class="hotspot-label">🌊 Waterlogging</div>
-        </div>
-        <div class="hotspot" onclick="discoverProblem('Vadapalani')" style="top: 50%; left: 50%;">
-            <div class="ping"></div>
-            <div class="hotspot-label">🚦 Traffic Jam</div>
+    <!-- ========================================== -->
+    <!-- STREET HERO OVERLAY MODE -->
+    <!-- ========================================== -->
+    <div id="street-hero-overlay">
+        <!-- Breaking News Banner -->
+        <div id="breaking-news">
+            <div class="news-badge">🚨 BREAKING NEWS</div>
+            <div class="news-text" id="breaking-news-text">Flooding reported in Porur! Citizens need help.</div>
         </div>
 
-        <button class="action" style="position: absolute; top: 80px; right: 30px; width: auto; background: #ef4444; z-index: 10000; padding: 10px 20px; font-size: 16px;" onclick="stopExploration()">🛑 Exit Street View</button>
+        <!-- Side-Scrolling Street Background -->
+        <div id="hero-street-bg">
+            <div id="hero-character">🦸‍♂️</div>
+            
+            <!-- The Problem Hotspot -->
+            <div id="hero-problem" onclick="openMissionModal()">
+                <div class="ping"></div>
+                <div class="problem-icon" id="hero-problem-icon">🌊</div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div id="hero-controls">
+            <button class="touch-btn" onclick="moveHero('left')">⬅️ Walk Left</button>
+            <div id="hero-instruction">Use Arrow Keys or Buttons to reach the problem!</div>
+            <button class="touch-btn" onclick="moveHero('right')">Walk Right ➡️</button>
+        </div>
+
+        <button class="action" style="position: absolute; top: 80px; right: 30px; width: auto; background: #ef4444; z-index: 10000; padding: 10px 20px; font-size: 16px;" onclick="stopStreetHero()">🛑 Exit Hero Mode</button>
+    </div>
+
+    <!-- MISSION MODAL -->
+    <div id="mission-modal" class="game-modal">
+        <div class="modal-content">
+            <h2 id="mission-title" style="color: #ef4444;">🔍 INVESTIGATE PROBLEM</h2>
+            <p id="mission-desc" style="margin-bottom: 20px; color: #cbd5e1; font-size: 14px;"></p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="action" style="background: #3b82f6;" onclick="solveHeroMission(20, 30)">🚧 Clear Drainage (₹20 Cr)</button>
+                <button class="action" style="background: #10b981;" onclick="solveHeroMission(40, 25)">🚇 Build Metro (₹40 Cr)</button>
+                <button class="action" style="background: #475569;" onclick="closeMissionModal()">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <!-- VICTORY SCREEN -->
