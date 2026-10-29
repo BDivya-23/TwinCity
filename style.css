@@ -242,6 +242,102 @@ button.action:disabled { background: #475569; cursor: not-allowed; opacity: 0.7;
 .park-fade-in { animation: park-pulse 3s ease-in-out infinite alternate; }
 @keyframes park-pulse { 0% { fill-opacity: 0.3; } 100% { fill-opacity: 0.6; } }
 
+/* =============================================================
+   CITY SELECTION MODAL
+   ============================================================= */
+#selection-modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(10, 22, 40, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+}
+
+.selection-content {
+    background: #1e293b;
+    padding: 30px;
+    border-radius: 15px;
+    border: 2px solid #3b82f6;
+    box-shadow: 0 0 50px rgba(59, 130, 246, 0.3);
+    width: 90%;
+    max-width: 800px;
+    margin: 20px;
+}
+
+.selection-content h1 {
+    text-align: center;
+    margin-bottom: 10px;
+    color: #f8fafc;
+}
+
+.selection-content p {
+    text-align: center;
+    font-size: 15px;
+}
+
+#selection-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.select-card {
+    background: rgba(15, 23, 42, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    position: relative;
+}
+
+.select-card:hover {
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+}
+
+.select-card.selected {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: #10b981;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+}
+
+.select-card.selected::after {
+    content: "✓";
+    position: absolute;
+    top: 10px; right: 10px;
+    background: #10b981;
+    color: white;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.select-card .city-name {
+    font-weight: bold;
+    font-size: 16px;
+    color: #f8fafc;
+    margin-bottom: 5px;
+}
+
+.select-card .city-stats {
+    font-size: 11px;
+    color: #94a3b8;
+    line-height: 1.4;
+}
+
+/* === RESPONSIVE === */
 @media (max-width: 1024px) {
     html, body { grid-template-columns: 1fr; grid-template-rows: 60px 1fr 300px; }
     #map { grid-column: 1; grid-row: 2; }
@@ -250,4 +346,5 @@ button.action:disabled { background: #475569; cursor: not-allowed; opacity: 0.7;
     #budget-section { flex-direction: column; align-items: center; text-align: center; }
     #budget-legend { align-items: center; width: 100%; }
     .legend-row { width: 150px; }
+    #selection-grid { grid-template-columns: repeat(2, 1fr); }
 }
