@@ -15,8 +15,6 @@
 
     <div id="map"></div>
     <div id="rain-overlay"></div>
-
-    <!-- FLOATING CITY REPORT TOAST -->
     <div id="city-toast"></div>
 
     <div id="dashboard">
@@ -153,11 +151,26 @@
         <button class="action" id="approve-btn" onclick="approveProposal()" disabled>✍️ Sign & Approve Resolution</button>
     </div>
 
+    <!-- CITY SELECTION MODAL -->
+    <div id="selection-modal">
+        <div class="selection-content">
+            <h1>🏙️ Welcome, Mayor!</h1>
+            <p style="color: #cbd5e1; margin-bottom: 20px;">You have a budget of ₹200 Crores. Choose <strong>exactly 10 cities</strong> from the 15 available to manage this term.</p>
+            
+            <div id="selection-grid"></div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <span id="selection-counter" style="font-size: 18px; font-weight: bold; color: #f59e0b;">Selected: 0 / 10</span>
+                <button class="action" id="start-game-btn" onclick="startGameWithSelection()" style="width: auto; padding: 12px 30px; font-size: 16px;" disabled>Start Mayoral Term</button>
+            </div>
+        </div>
+    </div>
+
     <!-- VICTORY SCREEN -->
     <div id="victory-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(10, 22, 40, 0.95); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(10px);">
         <div style="background: #1e293b; padding: 40px; border-radius: 15px; text-align: center; border: 2px solid #d4af37; box-shadow: 0 0 50px rgba(212, 175, 55, 0.3); max-width: 500px;">
             <h1 style="color: #d4af37; font-size: 36px; margin-bottom: 10px;">🏆 MISSION ACCOMPLISHED!</h1>
-            <p style="font-size: 16px; color: #cbd5e1; line-height: 1.6; margin-bottom: 25px;">You have strategically saved 10 cities in Chennai within your budget! The citizens thank you, Mayor.</p>
+            <p style="font-size: 16px; color: #cbd5e1; line-height: 1.6; margin-bottom: 25px;">You have strategically saved all 10 chosen cities in Chennai within your budget! The citizens thank you, Mayor.</p>
             <button class="action" style="background: #10b981; font-size: 16px;" onclick="resetGame()">Play Again</button>
         </div>
     </div>
