@@ -1,66 +1,35 @@
 // === STATE ===
 const cityState = {
-    budget: 250, happiness: 65, selectedArea: null, // Increased budget to accommodate 10 areas
+    budget: 100, happiness: 85, selectedArea: null,
     areas: {
         Velachery:  { flood: 80, traffic: 60, solved: false },
         Vadapalani: { flood: 35, traffic: 75, solved: false },
-        Porur:      { flood: 45, traffic: 70, solved: false },
-        ECR:        { flood: 60, traffic: 40, solved: false },
-        "T. Nagar": { flood: 25, traffic: 85, solved: false },
-        "Anna Salai": { flood: 30, traffic: 90, solved: false },
-        Ramapuram:  { flood: 55, traffic: 65, solved: false },
-        Koyambedu:  { flood: 40, traffic: 80, solved: false },
-        "Tidel Park": { flood: 70, traffic: 50, solved: false },
-        Tambaram:   { flood: 50, traffic: 75, solved: false }
+        Porur:      { flood: 45, traffic: 70, solved: false }
     }
 };
 
 const locations = [ 
     { name: 'Velachery', coords: [12.9750, 80.2210] }, 
     { name: 'Vadapalani', coords: [13.0503, 80.2121] }, 
-    { name: 'Porur', coords: [13.0358, 80.1568] },
-    { name: 'ECR', coords: [12.9850, 80.2600] },
-    { name: 'T. Nagar', coords: [13.0400, 80.2350] },
-    { name: 'Anna Salai', coords: [13.0600, 80.2700] },
-    { name: 'Ramapuram', coords: [13.0300, 80.1800] },
-    { name: 'Koyambedu', coords: [13.0700, 80.1950] },
-    { name: 'Tidel Park', coords: [12.9900, 80.2450] },
-    { name: 'Tambaram', coords: [12.9200, 80.1200] }
+    { name: 'Porur', coords: [13.0358, 80.1568] } 
 ];
 
 const advisorRules = [
-    { keywords: ['drain', 'water', 'flood'], cost: 25, impact: 30, text: "Drainage system: reduces flooding significantly. Estimated cost: ₹25 crore. May cause 3 months of local disruption." },
-    { keywords: ['metro', 'train', 'transport'], cost: 45, impact: 25, text: "Metro extension: improves connectivity and traffic. Estimated cost: ₹45 crore. High construction impact." },
-    { keywords: ['park', 'green', 'tree'], cost: 15, impact: 10, text: "Green spaces: improves citizen happiness. Estimated cost: ₹15 crore. Minor flood benefit." },
-    { keywords: ['road', 'pothole', 'flyover', 'bridge'], cost: 20, impact: 15, text: "Road repairs & infrastructure: improves accessibility. Estimated cost: ₹20 crore." }
+    { keywords: ['drain', 'water', 'flood'], cost: 20, impact: 30, text: "Drainage system: reduces flooding significantly. Estimated cost: ₹20 crore. May cause 3 months of local disruption." },
+    { keywords: ['metro', 'train', 'transport'], cost: 40, impact: 25, text: "Metro extension: improves connectivity and traffic. Estimated cost: ₹40 crore. High construction impact." },
+    { keywords: ['park', 'green', 'tree'], cost: 10, impact: 10, text: "Green spaces: improves citizen happiness. Estimated cost: ₹10 crore. Minor flood benefit." },
+    { keywords: ['road', 'pothole'], cost: 15, impact: 15, text: "Road repairs: improves accessibility. Estimated cost: ₹15 crore." }
 ];
 
 let currentProposal = null;
 let map;
 let mapMarkers = {}; 
 let infrastructureLayer; 
+let ambientCars = []; 
 
 // =============================================================
-// PER-AREA MINI-CARDS & MAP ZOOM
+// PER-AREA MINI-CARDS
 // =============================================================
-function handleAreaCardClick(name) {
-    if (map) {
-        const loc = locations.find(l => l.name === name);
-        if (loc) map.flyTo(loc.coords, 15, { duration: 1.5 });
-    }
-
-    if (typeof selectArea === 'function') {
-        selectArea(name, true); 
-    }
-    renderAreaCards();
-    
-    const panel = document.getElementById('problem-panel');
-    if (panel) {
-        const a = cityState.areas[name];
-        panel.innerHTML = `<strong>${name}</strong><br>Flood Severity: ${a.flood}/100<br>Traffic: ${a.traffic}/100`;
-    }
-}
-
 function renderAreaCards() {
     const container = document.getElementById('area-cards-container');
     if (!container) return;
@@ -114,9 +83,19 @@ function renderAreaCards() {
     }).join('');
 }
 
-// =============================================================
-// QUICK-ACTION CHIPS
-// =============================================================
+function handleAreaCardClick(name) {
+    if (typeof selectArea === 'function') {
+        selectArea(name);
+    }
+    renderAreaCards();
+    
+    const panel = document.getElementById('problem-panel');
+    if (panel) {
+        const a = cityState.areas[name];
+        panel.innerHTML = `<strong>${name}</strong><br>Flood Severity: ${a.flood}/100<br>Traffic: ${a.traffic}/100`;
+    }
+}
+
 function appendChip(text) {
     const input = document.getElementById('proposal-input');
     if (!input) return;
@@ -135,14 +114,14 @@ function appendChip(text) {
 // =============================================================
 // CORE LOGIC
 // =============================================================
-function selectArea(name, fromUI = false) {
+function selectArea(name) {
     const area = cityState.areas[name];
     if (area.solved) return; 
 
     cityState.selectedArea = name;
     
     const rainOverlay = document.getElementById('rain-overlay');
-    if (name === 'Velachery' || name === 'ECR' || name === 'Tidel Park') {
+    if (name === 'Velachery') {
         rainOverlay.style.display = 'block';
     } else {
         rainOverlay.style.display = 'none';
@@ -150,11 +129,8 @@ function selectArea(name, fromUI = false) {
     
     document.getElementById('proposal-input').value = '';
     document.getElementById('advisor-container').style.display = 'none';
-    document.getElementById('draft-document').style.display = 'none';
     document.getElementById('what-if-result').style.display = 'none';
     document.getElementById('approve-btn').disabled = true;
-
-    if (!fromUI) { renderAreaCards(); }
 }
 
 function evaluateProposal() {
@@ -175,83 +151,50 @@ function evaluateProposal() {
     
     const box = document.getElementById('advisor-response');
     const container = document.getElementById('advisor-container');
-    const draftBox = document.getElementById('draft-document');
     const avatar = document.getElementById('advisor-avatar');
-    const approveBtn = document.getElementById('approve-btn');
-    const stamp = document.getElementById('draft-stamp');
-
-    container.style.display = 'block'; 
-    box.style.display = 'block';
-    draftBox.style.display = 'none'; 
-    stamp.classList.remove('slam');
+    container.style.display = 'block'; box.style.display = 'block';
 
     if (matched && !area.solved) {
         currentProposal = matched;
-        box.innerHTML = `<span style="color:#4ade80">✅ Draft prepared.</span> I have drafted a formal resolution for the ${cityState.selectedArea} area. Please review and sign below.`;
-        avatar.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=10b981"; 
-        avatar.style.borderColor = "#10b981";
-
-        document.getElementById('draft-subject').innerText = matched.text.split(':')[0];
-        document.getElementById('draft-cost').innerText = `₹${matched.cost} Crore`;
-        document.getElementById('draft-impact').innerText = `Reduce Risk by ${matched.impact} points.`;
-        
-        draftBox.style.display = 'block';
-        approveBtn.disabled = false;
-
+        box.innerHTML = `<span style="color:#4ade80">✅ Recommended</span><br>${matched.text}<br><em>Reason: recognized keyword matching proposal.</em>`;
+        document.getElementById('approve-btn').disabled = false;
+        avatar.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=10b981"; avatar.style.borderColor = "#10b981";
     } else if (area.solved) {
-        box.innerHTML = `<span style="color:#ef4444">⚠️ Already solved.</span>`; 
-        approveBtn.disabled = true;
-        avatar.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=ef4444"; 
-        avatar.style.borderColor = "#ef4444";
+        box.innerHTML = `<span style="color:#ef4444">⚠️ Already solved.</span>`; document.getElementById('approve-btn').disabled = true;
+        avatar.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=ef4444"; avatar.style.borderColor = "#ef4444";
     } else {
         currentProposal = null;
         box.innerHTML = `<span style="color:#facc15">🤔 Unrecognized idea.</span> Try words like "drainage", "metro", "park", or "road".`;
-        approveBtn.disabled = true;
-        avatar.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=facc15"; 
-        avatar.style.borderColor = "#facc15";
+        document.getElementById('approve-btn').disabled = true;
+        avatar.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=facc15"; avatar.style.borderColor = "#facc15";
     }
 }
 
 function approveProposal() {
     if (!currentProposal) return;
     const area = cityState.areas[cityState.selectedArea];
-    if (cityState.budget < currentProposal.cost) { 
-        document.getElementById('advisor-response').innerHTML = `<span style="color:#ef4444; font-weight:bold;">❌ INSUFFICIENT FUNDS!</span>`; 
-        return; 
-    }
+    if (cityState.budget < currentProposal.cost) { document.getElementById('advisor-response').innerHTML = `<span style="color:#ef4444; font-weight:bold;">❌ INSUFFICIENT FUNDS!</span>`; return; }
     
-    const stamp = document.getElementById('draft-stamp');
-    stamp.classList.add('slam');
+    cityState.budget -= currentProposal.cost;
     
-    const approveBtn = document.getElementById('approve-btn');
-    approveBtn.disabled = true;
-    approveBtn.innerText = "Processing...";
+    area.flood = 0; 
+    area.traffic = 0;
+    area.solved = true;
+    
+    let happinessBonus = 5; if (currentProposal.keywords.includes('park')) happinessBonus = 15; if (currentProposal.keywords.includes('drain')) happinessBonus = 10; if (currentProposal.keywords.includes('metro')) happinessBonus = 5;  
+    cityState.happiness = Math.min(100, cityState.happiness + happinessBonus);
+    
+    showFloatingText(`-₹${currentProposal.cost} Cr`, '#ef4444'); showFloatingText(`+${happinessBonus}% Happiness`, '#10b981');
+    
+    updateDashboard(); 
+    renderCityInfrastructure(); 
+    saveGame();
+    
+    document.getElementById('approve-btn').disabled = true;
+    document.getElementById('advisor-response').innerHTML += `<br><br><span style="color:#4ade80">✔ Implemented! Budget: ₹${cityState.budget} Cr</span>`;
+    document.getElementById('proposal-input').value = '';
 
-    setTimeout(() => {
-        cityState.budget -= currentProposal.cost;
-        area.flood = 0; 
-        area.traffic = 0;
-        area.solved = true;
-        
-        let happinessBonus = 5; 
-        if (currentProposal.keywords.includes('park')) happinessBonus = 15; 
-        if (currentProposal.keywords.includes('drain')) happinessBonus = 10; 
-        if (currentProposal.keywords.includes('metro')) happinessBonus = 5;  
-        cityState.happiness = Math.min(100, cityState.happiness + happinessBonus);
-        
-        showFloatingText(`-₹${currentProposal.cost} Cr`, '#ef4444'); 
-        showFloatingText(`+${happinessBonus}% Happiness`, '#10b981');
-        
-        updateDashboard(); 
-        renderCityInfrastructure();
-        saveGame();
-        
-        document.getElementById('advisor-response').innerHTML += `<br><br><span style="color:#4ade80">✔ Resolution signed! Budget: ₹${cityState.budget} Cr</span>`;
-        document.getElementById('proposal-input').value = '';
-        approveBtn.innerText = "✅ Implemented";
-
-        checkWinCondition(); 
-    }, 800); 
+    checkWinCondition(); 
 }
 
 // =============================================================
@@ -261,6 +204,16 @@ function updateDashboard() {
     renderDonut();
     renderApproval();
     renderAreaCards();
+
+    for (let name in cityState.areas) {
+        if (cityState.areas[name].solved) {
+            const badge = document.getElementById(`badge-${name.toLowerCase()}`);
+            if (badge) {
+                badge.classList.remove('badge-locked');
+                badge.classList.add('badge-unlocked');
+            }
+        }
+    }
 
     for (let name in cityState.areas) {
         if (cityState.areas[name].solved && mapMarkers[name]) {
@@ -276,7 +229,7 @@ function updateDashboard() {
 
 function renderDonut() {
     const remaining = cityState.budget;
-    const total = 250; // Updated to match new total budget
+    const total = 100;
     const spent = Math.max(0, total - remaining);
     const circumference = 2 * Math.PI * 50;
 
@@ -297,7 +250,7 @@ function renderDonut() {
     const amountEl = document.getElementById('donut-amount');
     if (amountEl) {
         amountEl.textContent = '₹' + remaining;
-        amountEl.style.color = remaining < 50 ? '#ef4444' : '#10b981';
+        amountEl.style.color = remaining < 30 ? '#ef4444' : '#10b981';
     }
 
     const legendRem = document.getElementById('legend-remaining');
@@ -308,8 +261,8 @@ function renderDonut() {
 
 function renderApproval() {
     const h = cityState.happiness;
+
     let emoji = '😐'; let color = '#facc15';
-    
     if (h < 40)      { emoji = '😡'; color = '#ef4444'; }
     else if (h < 60) { emoji = '😟'; color = '#f97316'; }
     else if (h < 75) { emoji = '😐'; color = '#facc15'; }
@@ -328,14 +281,8 @@ function renderApproval() {
         emojiEl.classList.add('bump');
     }
 
-    if (happinessEl) {
-        happinessEl.textContent = h + '%';
-        happinessEl.style.color = color;
-    }
-    if (fill) {
-        fill.style.width = h + '%';
-        fill.style.background = color;
-    }
+    if (happinessEl) { happinessEl.textContent = h + '%'; happinessEl.style.color = color; }
+    if (fill) { fill.style.width = h + '%'; fill.style.background = color; }
     if (stars) {
         const filled = Math.round(h / 20);
         stars.textContent = '★'.repeat(filled) + '☆'.repeat(5 - filled);
@@ -343,7 +290,7 @@ function renderApproval() {
 }
 
 // =============================================================
-// MAP TRANSFORMATIONS (DIGITAL TWIN)
+// MAP TRANSFORMATIONS
 // =============================================================
 function initInfrastructureLayer() {
     if (typeof map !== 'undefined' && !infrastructureLayer) {
@@ -355,105 +302,165 @@ function renderCityInfrastructure() {
     if (!infrastructureLayer) initInfrastructureLayer();
     if (!infrastructureLayer) return;
 
-    infrastructureLayer.clearLayers(); 
+    infrastructureLayer.clearLayers();
 
-    // 1. VADAPALANI: METRO LINE
     if (cityState.areas['Vadapalani'].solved) {
-        const metroCoords = [ [13.0503, 80.2121], [13.0450, 80.2200], [13.0400, 80.2350], [13.0350, 80.2500] ];
-        L.polyline(metroCoords, { color: '#3b82f6', weight: 6, opacity: 0.9, dashArray: '10, 10', lineCap: 'round', className: 'metro-line-anim' }).addTo(infrastructureLayer).bindTooltip("🚇 New Metro Extension", { permanent: true, direction: "right", className: 'map-tooltip' });
+        const metroCoords = [[13.0503, 80.2121], [13.0450, 80.2200], [13.0400, 80.2350], [13.0350, 80.2500]];
+        const metroLine = L.polyline(metroCoords, { color: '#3b82f6', weight: 6, opacity: 0.9, dashArray: '10, 10', lineCap: 'round', className: 'metro-line-anim' }).addTo(infrastructureLayer);
+        L.circleMarker([13.0503, 80.2121], { radius: 6, color: '#fff', weight: 2, fillColor: '#3b82f6', fillOpacity: 1 }).addTo(infrastructureLayer);
+        metroLine.bindTooltip("🚇 New Metro Extension", { permanent: true, direction: "right", className: 'map-tooltip' });
     }
 
-    // 2. VELACHERY: FLOOD PARK
     if (cityState.areas['Velachery'].solved) {
-        const parkCoords = [ [12.9800, 80.2150], [12.9780, 80.2210], [12.9720, 80.2220], [12.9710, 80.2160], [12.9750, 80.2130] ];
+        const parkCoords = [[12.9800, 80.2150], [12.9780, 80.2210], [12.9720, 80.2220], [12.9710, 80.2160], [12.9750, 80.2130]];
         L.polygon(parkCoords, { color: '#10b981', weight: 2, fillColor: '#10b981', fillOpacity: 0.4, className: 'park-fade-in' }).addTo(infrastructureLayer).bindTooltip("🌳 Flood Absorption Park", { permanent: true, direction: "center", className: 'map-tooltip' });
     }
 
-    // 3. PORUR: RING ROAD
     if (cityState.areas['Porur'].solved) {
-        const ringRoadCoords = [ [13.0358, 80.1568], [13.0450, 80.1400], [13.0600, 80.1450], [13.0700, 80.1600], [13.0600, 80.1800], [13.0400, 80.1800], [13.0358, 80.1568] ];
+        const ringRoadCoords = [[13.0358, 80.1568], [13.0450, 80.1400], [13.0600, 80.1450], [13.0700, 80.1600], [13.0600, 80.1800], [13.0400, 80.1800], [13.0358, 80.1568]];
         L.polyline(ringRoadCoords, { color: '#f59e0b', weight: 8, opacity: 0.8, lineCap: 'round', lineJoin: 'round' }).addTo(infrastructureLayer).bindTooltip("🛣️ New Porur Bypass", { permanent: true, direction: "center", className: 'map-tooltip' });
     }
-
-    // 4. ECR: COASTAL WALKWAY
-    if (cityState.areas['ECR'].solved) {
-        const ecrCoords = [ [12.9850, 80.2600], [12.9700, 80.2650], [12.9500, 80.2700] ];
-        L.polyline(ecrCoords, { color: '#0ea5e9', weight: 5, opacity: 0.8, dashArray: '5, 10' }).addTo(infrastructureLayer).bindTooltip("🏖️ Coastal Walkway", { permanent: true, direction: "right", className: 'map-tooltip' });
-    }
-
-    // 5. T. NAGAR: FLYOVER
-    if (cityState.areas['T. Nagar'].solved) {
-        const flyoverCoords = [ [13.0350, 80.2300], [13.0400, 80.2350], [13.0450, 80.2400] ];
-        L.polyline(flyoverCoords, { color: '#a855f7', weight: 7, opacity: 0.9 }).addTo(infrastructureLayer).bindTooltip("🌉 T.Nagar Flyover", { permanent: true, direction: "top", className: 'map-tooltip' });
-    }
-
-    // 6. ANNA SALAI: WIDENED CORRIDOR
-    if (cityState.areas['Anna Salai'].solved) {
-        const annaSalaiCoords = [ [13.0600, 80.2700], [13.0700, 80.2750], [13.0800, 80.2800] ];
-        L.polyline(annaSalaiCoords, { color: '#10b981', weight: 9, opacity: 0.8 }).addTo(infrastructureLayer).bindTooltip("🛣️ Anna Salai Corridor", { permanent: true, direction: "top", className: 'map-tooltip' });
-    }
-
-    // 7. RAMAPURAM: SUBWAY
-    if (cityState.areas['Ramapuram'].solved) {
-        const subwayCoords = [ [13.0300, 80.1800], [13.0330, 80.1830] ];
-        L.polyline(subwayCoords, { color: '#64748b', weight: 8, opacity: 0.9 }).addTo(infrastructureLayer).bindTooltip("🚇 Ramapuram Subway", { permanent: true, direction: "bottom", className: 'map-tooltip' });
-    }
-
-    // 8. KOYAMBEDU: FLYOVER
-    if (cityState.areas['Koyambedu'].solved) {
-        const koyambeduCoords = [ [13.0700, 80.1950], [13.0750, 80.2000] ];
-        L.polyline(koyambeduCoords, { color: '#a855f7', weight: 7, opacity: 0.9 }).addTo(infrastructureLayer).bindTooltip("🌉 Koyambedu Flyover", { permanent: true, direction: "top", className: 'map-tooltip' });
-    }
-
-    // 9. TIDEL PARK: IT CORRIDOR
-    if (cityState.areas['Tidel Park'].solved) {
-        const tidelCoords = [ [12.9900, 80.2450], [12.9880, 80.2480] ];
-        L.polygon(tidelCoords, { color: '#06b6d4', weight: 2, fillColor: '#06b6d4', fillOpacity: 0.5 }).addTo(infrastructureLayer).bindTooltip("💻 IT Park Corridor", { permanent: true, direction: "center", className: 'map-tooltip' });
-    }
-
-    // 10. TAMBARAM: RAILWAY UPGRADE
-    if (cityState.areas['Tambaram'].solved) {
-        const tambaramCoords = [ [12.9200, 80.1200], [12.9250, 80.1250], [12.9300, 80.1300] ];
-        L.polyline(tambaramCoords, { color: '#3b82f6', weight: 6, opacity: 0.9, dashArray: '10, 10' }).addTo(infrastructureLayer).bindTooltip("🚆 Tambaram Rail Upgrade", { permanent: true, direction: "right", className: 'map-tooltip' });
-    }
 }
 
 // =============================================================
-// STREET VIEW EXPLORATION (STREETQUEST)
+// STREET HERO MODE (MINI-GAME)
 // =============================================================
-function startExploration() {
-    const container = document.getElementById('street-view-container');
-    const bg = document.getElementById('street-view-bg');
-    container.style.display = 'block';
-    bg.style.transform = 'translate(0px, 0px) scale(1.1)';
+let heroPosition = 10; 
+const heroSpeed = 2; 
+let currentHeroTarget = 'Porur'; 
 
-    container.onmousemove = (e) => {
-        const x = (e.clientX / window.innerWidth) * 2 - 1;
-        const y = (e.clientY / window.innerHeight) * 2 - 1;
-        bg.style.transform = `translate(${x * -60}px, ${y * -30}px) scale(1.1)`;
-    };
-}
-
-function stopExploration() {
-    document.getElementById('street-view-container').style.display = 'none';
-    document.getElementById('street-view-container').onmousemove = null;
-}
-
-function discoverProblem(areaName) {
-    stopExploration();
-    handleAreaCardClick(areaName);
+function startStreetHero() {
+    const unsolved = Object.keys(cityState.areas).find(k => !cityState.areas[k].solved);
     
-    const panel = document.getElementById('problem-panel');
-    if(panel) {
-        panel.style.boxShadow = "0 0 20px rgba(239, 68, 68, 0.8)";
-        setTimeout(() => { panel.style.boxShadow = "none"; }, 3000);
+    if (!unsolved) {
+        alert("All zones are already solved! You are a true hero.");
+        return;
     }
-    document.getElementById('proposal-input').value = "Investigate and fix ";
-    document.getElementById('proposal-input').focus();
+
+    currentHeroTarget = unsolved;
+    
+    const icon = document.getElementById('hero-problem-icon');
+    const newsText = document.getElementById('breaking-news-text');
+    
+    if (currentHeroTarget === 'Velachery') {
+        newsText.innerText = "🌊 Flooding reported in Velachery! Citizens are stranded.";
+        icon.innerText = "🌊";
+    } else if (currentHeroTarget === 'Vadapalani') {
+        newsText.innerText = "🚦 Massive traffic jam in Vadapalani! Broken signals detected.";
+        icon.innerText = "🚦";
+    } else {
+        newsText.innerText = "🚧 Large pothole reported in Porur! Vehicles are getting damaged.";
+        icon.innerText = "🚧";
+    }
+
+    heroPosition = 10;
+    updateHeroPosition();
+    
+    document.getElementById('street-hero-overlay').style.display = 'block';
+    document.getElementById('breaking-news').style.animation = 'newsSlide 0.5s ease-out';
+}
+
+function stopStreetHero() {
+    document.getElementById('street-hero-overlay').style.display = 'none';
+}
+
+function moveHero(direction) {
+    const character = document.getElementById('hero-character');
+    character.classList.add('walking');
+
+    if (direction === 'right' && heroPosition < 80) {
+        heroPosition += heroSpeed;
+    } else if (direction === 'left' && heroPosition > 10) {
+        heroPosition -= heroSpeed;
+    }
+
+    updateHeroPosition();
+    
+    clearTimeout(window.walkTimeout);
+    window.walkTimeout = setTimeout(() => {
+        character.classList.remove('walking');
+    }, 200);
+}
+
+function updateHeroPosition() {
+    const character = document.getElementById('hero-character');
+    const bg = document.getElementById('hero-street-bg');
+    const problem = document.getElementById('hero-problem');
+
+    character.style.left = `${heroPosition}%`;
+    bg.style.transform = `translateX(-${heroPosition * 0.5}%)`;
+
+    if (heroPosition > 45 && heroPosition < 55) {
+        problem.style.display = 'flex';
+        problem.style.left = `${heroPosition}%`;
+    } else {
+        problem.style.display = 'none';
+    }
+}
+
+document.addEventListener('keydown', (e) => {
+    if (document.getElementById('street-hero-overlay').style.display === 'block') {
+        if (e.key === 'ArrowRight' || e.key === 'd') moveHero('right');
+        if (e.key === 'ArrowLeft' || e.key === 'a') moveHero('left');
+    }
+});
+
+function openMissionModal() {
+    const title = document.getElementById('mission-title');
+    const desc = document.getElementById('mission-desc');
+    
+    if (currentHeroTarget === 'Velachery') {
+        title.innerText = "🔍 BLOCKED DRAINAGE SYSTEM";
+        desc.innerText = "Water is overflowing because the storm drains are completely blocked with debris. How would you like to proceed?";
+    } else if (currentHeroTarget === 'Vadapalani') {
+        title.innerText = "🔍 BROKEN TRAFFIC SIGNAL";
+        desc.innerText = "The main junction signal is down, causing a massive gridlock. How would you like to proceed?";
+    } else {
+        title.innerText = "🔍 SEVERE ROAD DAMAGE";
+        desc.innerText = "A massive pothole has formed, risking accidents for commuters. How would you like to proceed?";
+    }
+
+    document.getElementById('mission-modal').style.display = 'flex';
+}
+
+function closeMissionModal() {
+    document.getElementById('mission-modal').style.display = 'none';
+}
+
+function solveHeroMission(cost, impact) {
+    if (cityState.budget < cost) {
+        alert("❌ INSUFFICIENT FUNDS! You don't have enough money in the treasury.");
+        return;
+    }
+
+    cityState.budget -= cost;
+    
+    const area = cityState.areas[currentHeroTarget];
+    area.flood = 0;
+    area.traffic = 0;
+    area.solved = true;
+    
+    cityState.happiness = Math.min(100, cityState.happiness + 15);
+
+    const icon = document.getElementById('hero-problem-icon');
+    icon.innerText = "✅";
+    icon.style.borderColor = "#10b981";
+    
+    showFloatingText(`Mission Success! +15% Happiness`, '#10b981');
+
+    closeMissionModal();
+    setTimeout(() => {
+        stopStreetHero();
+        updateDashboard();
+        renderCityInfrastructure();
+        saveGame();
+        checkWinCondition();
+        handleAreaCardClick(currentHeroTarget);
+    }, 1500);
 }
 
 // =============================================================
-// INITIALIZATION & HELPERS
+// INITIALIZATION
 // =============================================================
 window.onload = function() {
     const savedState = localStorage.getItem('twinCityState');
@@ -461,8 +468,8 @@ window.onload = function() {
     
     initMap(); 
     initInfrastructureLayer();
-    renderCityInfrastructure();
-    updateDashboard();
+    renderCityInfrastructure(); 
+    updateDashboard(); 
     
     const budgetSpan = document.getElementById('budget');
     if(budgetSpan) budgetSpan.innerText = `₹${cityState.budget} Cr`;
@@ -487,22 +494,19 @@ function showFloatingText(text, color) { const el = document.createElement('div'
 function simulateWhatIf(type) {
     if (!cityState.selectedArea) { alert("Please select an area on the map first!"); return; }
     const area = cityState.areas[cityState.selectedArea]; const resultBox = document.getElementById('what-if-result'); resultBox.style.display = 'block';
-    if (type === 'metro') { resultBox.innerHTML = `<strong>🚇 Metro Extension</strong><br>Cost: ₹45 Cr<br>Traffic Impact: -25 points<br>Flood Impact: 0 points<br><em>Budget after: ₹${cityState.budget - 45} Cr</em>`; document.getElementById('proposal-input').value = "metro extension"; } 
-    else if (type === 'drainage') { const floodReduction = area.flood > 50 ? "High" : "Medium"; resultBox.innerHTML = `<strong>🌊 Drainage System</strong><br>Cost: ₹25 Cr<br>Flood Impact: -30 points (${floodReduction})<br>Traffic Impact: 0 points<br><em>Budget after: ₹${cityState.budget - 25} Cr</em>`; document.getElementById('proposal-input').value = "drainage system"; }
+    if (type === 'metro') { resultBox.innerHTML = `<strong>🚇 Metro Extension</strong><br>Cost: ₹40 Cr<br>Traffic Impact: -25 points<br>Flood Impact: 0 points<br><em>Budget after: ₹${cityState.budget - 40} Cr</em>`; document.getElementById('proposal-input').value = "metro extension"; } 
+    else if (type === 'drainage') { const floodReduction = area.flood > 50 ? "High" : "Medium"; resultBox.innerHTML = `<strong>🌊 Drainage System</strong><br>Cost: ₹20 Cr<br>Flood Impact: -30 points (${floodReduction})<br>Traffic Impact: 0 points<br><em>Budget after: ₹${cityState.budget - 20} Cr</em>`; document.getElementById('proposal-input').value = "drainage system"; }
     evaluateProposal(); 
 }
 
 function initMap() {
-    map = L.map('map', { dragging: true, zoomControl: true }).setView([13.0500, 80.2100], 11); // Slightly zoomed out start
+    map = L.map('map', { dragging: true, zoomControl: true }).setView([13.0500, 80.2100], 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
     
     locations.forEach(loc => {
         const customIcon = L.divIcon({ className: 'custom-div-icon', html: `<div class='map-marker'>📍 ${loc.name}</div>`, iconSize: [100, 30], iconAnchor: [50, 15] });
         const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
         mapMarkers[loc.name] = marker;
-        marker.on('click', function() { 
-            selectArea(loc.name); 
-            renderAreaCards();
-        });
+        marker.on('click', function() { handleAreaCardClick(loc.name); });
     });
 }
