@@ -42,16 +42,107 @@ function animateValue(id, start, end, duration, prefix = "", suffix = "") {
     window.requestAnimationFrame(step);
 }
 
-// === DASHBOARD LOGIC ===
-function selectArea(name) {
-    cityState.selectedArea = name;
-    const area = cityState.areas[name];
-    document.getElementById('problem-panel').innerHTML = `<strong>${name}</strong><br>Flood Severity: ${area.flood}/100<br>Traffic: ${area.traffic}/100`;
-    document.getElementById('proposal-input').value = '';
-    document.getElementById('advisor-container').style.display = 'none';
-    document.getElementById('what-if-result').style.display = 'none';
-    document.getElementById('approve-btn').disabled = true;
+// =============================================================
+// FEATURE 2: PER-AREA MINI-CARDS
+// =============================================================
+function renderAreaCards() {
+    const container = document.getElementById('area-cards-container');
+    if (!container) return;
 
+    const names = Object.keys(cityState.areas);
+
+    container.innerHTML = names.map(name => {
+        const a = cityState.areas[name];
+        const isSelected = cityState.selectedArea === name;
+
+        // If solved, force visual stats to 0
+        const displayFlood = a.solved ? 0 : a.flood;
+        const displayTraffic = a.solved ? 0 : a.traffic;
+
+        let cls = 'area-card';
+        if (isSelected) cls += ' selected';
+        if (a.solved)   cls += ' solved';
+        if (!a.solved && !isSelected) cls += ' pick-hint';
+
+        let tag = '';
+        if (a.solved) {
+            tag = `<span class="area-solved-tag">✅ Solved</span>`;
+        } else if (isSelected) {
+            tag = `<span class="area-solved-tag">Selected</span>`;
+        }
+
+        return `
+            <div class="${cls}" data-area="${name}" onclick="handleAreaCardClick('${name}')">
+                <div class="area-card-header">
+                    <span class="area-status-dot"></span>
+                    <span class="area-name">${name}</span>
+                    ${tag}
+                </div>
+                <div class="area-stat-row">
+                    <span class="stat-emoji">🌊</span>
+                    <span class="stat-name">Flood</span>
+                    <div class="area-stat-bar flood">
+                        <div style="width:${displayFlood}%;"></div>
+                    </div>
+                    <span class="area-stat-val">${displayFlood}</span>
+                </div>
+                <div class="area-stat-row">
+                    <span class="stat-emoji">🚗</span>
+                    <span class="stat-name">Traffic</span>
+                    <div class="area-stat-bar traffic">
+                        <div style="width:${displayTraffic}%;"></div>
+                    </div>
+                    <span class="area-stat-val">${displayTraffic}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+/* Handle card clicks (syncs with map and updates cards) */
+function handleAreaCardClick(name) {
+    if (typeof selectArea === 'function') {
+        selectArea(name);
+    }
+    renderAreaCards();
+    
+    // Keep hidden problem-panel in sync for old logic
+    const panel = document.getElementById('problem-panel');
+    if (panel) {
+        const a = cityState.areas[name];
+        panel.innerHTML = `<strong>${name}</strong><br>Flood Severity: ${a.flood}/100<br>Traffic: ${a.traffic}/100`;
+    }
+}
+
+// =============================================================
+// FEATURE 5: QUICK-ACTION CHIPS
+// =============================================================
+function appendChip(text) {
+    const input = document.getElementById('proposal-input');
+    if (!input) return;
+
+    const existing = input.value.trim();
+    
+    // Append logic: prevent duplicates, add comma if text exists
+    if (!existing) {
+        input.value = text;
+    } else {
+        if (existing.toLowerCase().includes(text.toLowerCase())) return;
+        input.value = existing + ', ' + text;
+    }
+
+    // Focus and move cursor to the end
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
+}
+
+// === CORE LOGIC ===
+function selectArea(name) {
+    const area = cityState.areas[name];
+    if (area.solved) return; 
+
+    cityState.selectedArea = name;
+    
     // Trigger Rain for Velachery
     const rainOverlay = document.getElementById('rain-overlay');
     if (name === 'Velachery') {
@@ -59,11 +150,25 @@ function selectArea(name) {
     } else {
         rainOverlay.style.display = 'none';
     }
+    
+    document.getElementById('proposal-input').value = '';
+    document.getElementById('advisor-container').style.display = 'none';
+    document.getElementById('what-if-result').style.display = 'none';
+    document.getElementById('approve-btn').disabled = true;
 }
 
 function evaluateProposal() {
     const text = document.getElementById('proposal-input').value.toLowerCase();
-    if (!cityState.selectedArea) { alert("Please click a location on the map first!"); return; }
+    if (!cityState.selectedArea) { 
+        const unsolved = Object.keys(cityState.areas).find(k => !cityState.areas[k].solved);
+        if(unsolved) {
+            handleAreaCardClick(unsolved);
+        } else {
+            alert("All areas are already solved!"); 
+            return;
+        }
+    }
+    
     const area = cityState.areas[cityState.selectedArea];
     let matched = null;
     for (const rule of advisorRules) { if (rule.keywords.some(k => text.includes(k))) { matched = rule; break; } }
@@ -94,7 +199,6 @@ function approveProposal() {
     const area = cityState.areas[cityState.selectedArea];
     if (cityState.budget < currentProposal.cost) { document.getElementById('advisor-response').innerHTML = `<span style="color:#ef4444; font-weight:bold;">❌ INSUFFICIENT FUNDS!</span>`; return; }
     
-    // Store old values for animation
     const oldBudget = cityState.budget;
     const oldHappiness = cityState.happiness;
 
@@ -105,10 +209,8 @@ function approveProposal() {
     let happinessBonus = 5; if (currentProposal.keywords.includes('park')) happinessBonus = 15; if (currentProposal.keywords.includes('drain')) happinessBonus = 10; if (currentProposal.keywords.includes('metro')) happinessBonus = 5;  
     cityState.happiness = Math.min(100, cityState.happiness + happinessBonus);
     
-    // Trigger floating text
     showFloatingText(`-₹${currentProposal.cost} Cr`, '#ef4444'); showFloatingText(`+${happinessBonus}% Happiness`, '#10b981');
     
-    // Animate numbers in the dashboard
     animateValue('budget', oldBudget, cityState.budget, 1000, "₹", " Cr");
     animateValue('happiness', oldHappiness, cityState.happiness, 1000, "", "%");
 
@@ -117,6 +219,10 @@ function approveProposal() {
     
     document.getElementById('approve-btn').disabled = true;
     document.getElementById('advisor-response').innerHTML += `<br><br><span style="color:#4ade80">✔ Implemented! Budget: ₹${cityState.budget} Cr</span>`;
+    
+    // Clear the input after successful approval
+    document.getElementById('proposal-input').value = '';
+
     checkWinCondition(); 
 }
 
@@ -147,9 +253,12 @@ function updateDashboard() {
             mapMarkers[name].setIcon(L.divIcon({ className: 'custom-div-icon', html: `<div class='map-marker solved'>✅ ${name} (Solved)</div>`, iconSize: [150, 30], iconAnchor: [75, 15] }));
         }
     }
-    if (cityState.selectedArea) selectArea(cityState.selectedArea);
+
+    // Render the cards
+    renderAreaCards();
 }
 
+// === INITIALIZATION & HELPERS ===
 window.onload = function() {
     const savedState = localStorage.getItem('twinCityState');
     if (savedState) Object.assign(cityState, JSON.parse(savedState));
@@ -158,12 +267,17 @@ window.onload = function() {
     spawnTraffic(); 
     updateDashboard(); 
     
-    // Set initial text without animation
     document.getElementById('budget').innerText = `₹${cityState.budget} Cr`;
     document.getElementById('happiness').innerText = `${cityState.happiness}%`;
 
+    const unsolved = Object.keys(cityState.areas).find(k => !cityState.areas[k].solved);
+    if(unsolved) handleAreaCardClick(unsolved);
+
     checkWinCondition(); 
-    setTimeout(() => { map.invalidateSize(); }, 200);
+    setTimeout(() => { 
+        map.invalidateSize(); 
+        renderAreaCards(); // Bootstrap cards after layout settles
+    }, 250);
 };
 
 function saveGame() { localStorage.setItem('twinCityState', JSON.stringify(cityState)); }
@@ -174,8 +288,8 @@ function showFloatingText(text, color) { const el = document.createElement('div'
 function simulateWhatIf(type) {
     if (!cityState.selectedArea) { alert("Please select an area on the map first!"); return; }
     const area = cityState.areas[cityState.selectedArea]; const resultBox = document.getElementById('what-if-result'); resultBox.style.display = 'block';
-    if (type === 'metro') { resultBox.innerHTML = `<strong>🚇 Metro Extension</strong><br>Cost: ₹40 Cr<br>Traffic Impact: -25 points<br>Flood Impact: 0 points<br><em>Budget after: ₹${cityState.budget - 40} Cr</em>`; document.getElementById('proposal-input').value = "Build a metro extension"; } 
-    else if (type === 'drainage') { const floodReduction = area.flood > 50 ? "High" : "Medium"; resultBox.innerHTML = `<strong>🌊 Drainage System</strong><br>Cost: ₹20 Cr<br>Flood Impact: -30 points (${floodReduction})<br>Traffic Impact: 0 points<br><em>Budget after: ₹${cityState.budget - 20} Cr</em>`; document.getElementById('proposal-input').value = "Build a new drainage system"; }
+    if (type === 'metro') { resultBox.innerHTML = `<strong>🚇 Metro Extension</strong><br>Cost: ₹40 Cr<br>Traffic Impact: -25 points<br>Flood Impact: 0 points<br><em>Budget after: ₹${cityState.budget - 40} Cr</em>`; document.getElementById('proposal-input').value = "metro extension"; } 
+    else if (type === 'drainage') { const floodReduction = area.flood > 50 ? "High" : "Medium"; resultBox.innerHTML = `<strong>🌊 Drainage System</strong><br>Cost: ₹20 Cr<br>Flood Impact: -30 points (${floodReduction})<br>Traffic Impact: 0 points<br><em>Budget after: ₹${cityState.budget - 20} Cr</em>`; document.getElementById('proposal-input').value = "drainage system"; }
     evaluateProposal(); 
 }
 
@@ -187,13 +301,10 @@ function initMap() {
         const customIcon = L.divIcon({ className: 'custom-div-icon', html: `<div class='map-marker'>📍 ${loc.name}</div>`, iconSize: [100, 30], iconAnchor: [50, 15] });
         const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
         mapMarkers[loc.name] = marker;
-        marker.on('click', function() { selectArea(loc.name); });
+        marker.on('click', function() { handleAreaCardClick(loc.name); });
     });
 }
 
-// ==========================================
-// === AMBIENT TRAFFIC ===
-// ==========================================
 function spawnTraffic() {
     const emojis = ['🚙', '🚕', '🚌', '🚚', '🛵'];
     for(let i=0; i<10; i++) {
