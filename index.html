@@ -26,26 +26,61 @@
             </div>
         </div>
 
-        <h2>City Status</h2>
-        <div class="stat">
-            <span>💰 Budget</span>
-            <span id="budget">₹100 Cr</span>
-        </div>
-        <div class="progress-container">
-            <div class="progress-bar" id="budget-bar" style="width: 100%; background: #10b981;"></div>
-        </div>
+                    <h2>City Status</h2>
 
-        <!-- Happiness with Star Rating -->
-        <div class="stat" style="margin-top: 15px; flex-direction: column; align-items: flex-start;">
-            <div style="display: flex; justify-content: space-between; width: 100%;">
-                <span>😊 Citizen Happiness</span>
-                <span id="happiness">85%</span>
+            <!-- BUDGET DONUT -->
+            <div id="budget-section">
+                <div id="budget-donut-wrap">
+                    <svg id="budget-donut" viewBox="0 0 120 120" width="120" height="120">
+                        <!-- Background ring -->
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="12"/>
+                        <!-- Spent segment (red) -->
+                        <circle id="donut-spent" cx="60" cy="60" r="50" fill="none" stroke="#ef4444" stroke-width="12"
+                                stroke-dasharray="0 314.16" stroke-linecap="round" transform="rotate(-90 60 60)"
+                                style="transition: stroke-dasharray 0.6s ease;"/>
+                        <!-- Remaining segment (green) -->
+                        <circle id="donut-remaining" cx="60" cy="60" r="50" fill="none" stroke="#10b981" stroke-width="12"
+                                stroke-dasharray="314.16 314.16" stroke-linecap="round" transform="rotate(-90 60 60)"
+                                style="transition: stroke-dasharray 0.6s ease;"/>
+                    </svg>
+                    <div id="donut-center">
+                        <div id="donut-amount">₹100</div>
+                        <div id="donut-sub">Cr left</div>
+                    </div>
+                </div>
+                <div id="budget-legend">
+                    <div class="legend-row">
+                        <span class="legend-dot" style="background:#10b981;"></span>
+                        <span>Remaining</span>
+                        <strong id="legend-remaining">₹100 Cr</strong>
+                    </div>
+                    <div class="legend-row">
+                        <span class="legend-dot" style="background:#ef4444;"></span>
+                        <span>Spent</span>
+                        <strong id="legend-spent">₹0 Cr</strong>
+                    </div>
+                    <!-- Hidden spans keep old app.js working -->
+                    <span id="budget" style="display:none;">₹100 Cr</span>
+                    <div id="budget-bar" style="display:none;"></div>
+                </div>
             </div>
-            <div id="star-rating" style="color: #facc15; font-size: 20px; margin-top: 5px;">⭐⭐⭐⭐☆</div>
-        </div>
-        <div class="progress-container">
-            <div class="progress-bar" id="happiness-bar" style="width: 85%; background: #3b82f6;"></div>
-        </div>
+
+            <!-- ANIMATED APPROVAL METER -->
+            <div id="approval-section">
+                <div id="approval-header">
+                    <div id="approval-emoji">🙂</div>
+                    <div id="approval-text">
+                        <div class="approval-title">Citizen Approval</div>
+                        <div id="approval-percent-line">
+                            <span id="happiness">85%</span>
+                            <span id="star-rating">⭐⭐⭐⭐☆</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="approval-track">
+                    <div id="happiness-bar" class="approval-fill" style="width:85%;"></div>
+                </div>
+            </div>
 
         <!-- Achievements Badges -->
         <h2>Achievements</h2>
