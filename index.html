@@ -14,7 +14,6 @@
     </header>
 
     <div id="map"></div>
-    <!-- Rain Overlay -->
     <div id="rain-overlay"></div>
 
     <div id="dashboard">
@@ -56,8 +55,14 @@
             <div id="badge-porur" class="badge-locked" title="Fix Porur Traffic">🏗️</div>
         </div>
 
-        <h2>Selected Area</h2>
-        <div id="problem-panel">Click a location on the map to begin.</div>
+        <!-- NEW: Per-Area Mini-Cards -->
+        <h2>City Zones</h2>
+        <div id="area-cards-container">
+            <!-- Cards injected by JS -->
+        </div>
+        
+        <!-- Hidden for backward compatibility -->
+        <div id="problem-panel" style="display:none;">Click a location on the map to begin.</div>
 
         <h2>What If? Simulator</h2>
         <div style="display:flex; gap:10px; margin-bottom: 10px;">
@@ -68,6 +73,16 @@
         
         <h2>Propose a Solution</h2>
         <textarea id="proposal-input" placeholder="e.g., Build a new drainage system..."></textarea>
+
+        <!-- NEW: Quick-Action Chips -->
+        <div id="quick-chips">
+            <button class="chip" onclick="appendChip('drainage system')">🌊 Drainage</button>
+            <button class="chip" onclick="appendChip('metro extension')">🚇 Metro</button>
+            <button class="chip" onclick="appendChip('green park')">🌳 Park</button>
+            <button class="chip" onclick="appendChip('road repair')">🛣️ Road Repair</button>
+            <button class="chip" onclick="appendChip('flood prevention')">🚧 Flood Control</button>
+        </div>
+
         <button class="action" onclick="evaluateProposal()">🔍 Evaluate Proposal</button>
         
         <div id="advisor-container" style="display:none; margin-top: 15px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
