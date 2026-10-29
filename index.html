@@ -16,10 +16,14 @@
     <div id="map"></div>
     <div id="rain-overlay"></div>
 
+    <!-- NEW: FLOATING CITY REPORT TOAST -->
+    <div id="city-toast">
+        <!-- Content injected by JS -->
+    </div>
+
     <div id="dashboard">
         <h1>🏛️ Mayor Dashboard</h1>
         
-        <!-- Scrolling News Ticker -->
         <div class="news-ticker">
             <div class="ticker-text">
                 🚨 Breaking: Heavy waterlogging reported in Velachery. Traffic at a standstill in Porur. Mayor's approval rating at 65%. We need action!
@@ -28,7 +32,6 @@
 
         <h2>City Status</h2>
         
-        <!-- BUDGET DONUT -->
         <div id="budget-section">
             <div id="budget-donut-wrap">
                 <svg id="budget-donut" viewBox="0 0 120 120" width="120" height="120">
@@ -61,7 +64,6 @@
             </div>
         </div>
 
-        <!-- ANIMATED APPROVAL METER -->
         <div id="approval-section">
             <div id="approval-header">
                 <div id="approval-emoji">🙂</div>
@@ -78,7 +80,6 @@
             </div>
         </div>
 
-        <!-- Achievements -->
         <h2>Achievements</h2>
         <div id="achievements-container" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px;">
             <div id="badge-velachery" class="badge-locked" title="Velachery">🌊</div>
@@ -98,18 +99,15 @@
             <div id="badge-besantnagar" class="badge-locked" title="Besant Nagar">🏝️</div>
         </div>
 
-        <!-- StreetQuest Mode -->
         <h2>StreetQuest Mode</h2>
         <button class="action" style="background: #f59e0b; color: #000; font-weight: 800; margin-bottom: 15px;" onclick="startExploration()">🕵️ Explore Chennai Streets</button>
 
-        <!-- Per-Area Mini-Cards -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin: 25px 0 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
             <h2 style="margin: 0; border: none; padding: 0;">City Zones</h2>
             <span id="goal-counter" style="font-size: 12px; font-weight: bold; color: #f59e0b; background: rgba(245, 158, 11, 0.2); padding: 4px 8px; border-radius: 12px; border: 1px solid #f59e0b;">Saved: 0 / 10</span>
         </div>
         <div id="area-cards-container"></div>
         
-        <!-- Hidden for backward compatibility -->
         <div id="problem-panel" style="display:none;">Click a location on the map to begin.</div>
 
         <h2>What If? Simulator</h2>
@@ -131,7 +129,6 @@
         </div>
         <button class="action" onclick="evaluateProposal()">🔍 Evaluate Proposal</button>
 
-        <!-- ADVISOR CHAT & DRAFT SYSTEM -->
         <div id="advisor-container" style="display:none; margin-top: 15px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
             <div style="display: flex; gap: 15px; align-items: flex-start;">
                 <img id="advisor-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=3b82f6" style="width: 55px; height: 55px; border-radius: 50%; border: 2px solid #3b82f6; background: #0f172a; flex-shrink: 0;">
@@ -139,7 +136,6 @@
             </div>
         </div>
 
-        <!-- THE OFFICIAL DRAFT DOCUMENT -->
         <div id="draft-document" style="display: none;">
             <div class="draft-paper">
                 <div class="draft-header">
@@ -160,32 +156,6 @@
         </div>
 
         <button class="action" id="approve-btn" onclick="approveProposal()" disabled>✍️ Sign & Approve Resolution</button>
-    </div>
-
-    <!-- NEW: CITY PROBLEM ALERT POPUP -->
-    <div id="problem-alert-modal" class="game-modal">
-        <div class="modal-content" style="border-color: #ef4444; max-width: 450px;">
-            <h2 id="alert-city-name" style="color: #ef4444; margin-bottom: 5px;">🚨 CITY ALERT</h2>
-            <p style="color: #cbd5e1; font-size: 13px; margin-bottom: 20px;">The following infrastructure issues require your immediate attention:</p>
-            
-            <div class="alert-issue-box" style="border-left: 4px solid #3b82f6;">
-                <span style="font-size: 24px;">🌊</span>
-                <div>
-                    <strong style="color: #f8fafc; font-size: 14px;">Flooding Report</strong>
-                    <p id="alert-flood-text" style="color: #94a3b8; font-size: 12px; margin-top: 4px;">Severity: 45/100</p>
-                </div>
-            </div>
-
-            <div class="alert-issue-box" style="border-left: 4px solid #f59e0b;">
-                <span style="font-size: 24px;">🚦</span>
-                <div>
-                    <strong style="color: #f8fafc; font-size: 14px;">Traffic Report</strong>
-                    <p id="alert-traffic-text" style="color: #94a3b8; font-size: 12px; margin-top: 4px;">Severity: 70/100</p>
-                </div>
-            </div>
-
-            <button class="action" style="background: #3b82f6; margin-top: 20px;" onclick="closeProblemAlert()">I Understand. Let's Fix It!</button>
-        </div>
     </div>
 
     <!-- FULL SCREEN STREET VIEW (STREETQUEST) -->
