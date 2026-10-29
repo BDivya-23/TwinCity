@@ -1,5 +1,5 @@
 // === STATE ===
-const GAME_VERSION = "1.0.27"; 
+const GAME_VERSION = "1.0.28"; 
 
 const MASTER_CITIES = {
     Velachery:  { flood: 80, traffic: 60, solved: false },
@@ -21,7 +21,7 @@ const MASTER_CITIES = {
 
 const cityState = {
     budget: 200, happiness: 65, score: 0, selectedArea: null,
-    areas: {} 
+    areas: {}, isGameOver: false 
 };
 
 const locations = [ 
@@ -147,6 +147,7 @@ function startGameWithSelection() {
 // TIMER LOGIC
 // =============================================================
 function startTimer(cityName) {
+    if (cityState.isGameOver) return;
     if (activeCityForTimer === cityName && timerInterval) return;
     if (timerInterval) clearInterval(timerInterval);
     
@@ -182,7 +183,7 @@ function stopTimer() {
 
 function handleTimeout() {
     const failedCity = activeCityForTimer;
-    if (!failedCity) return;
+    if (!failedCity || cityState.isGameOver) return;
 
     cityState.score -= 20;
     document.getElementById('score-display').innerText = cityState.score;
@@ -210,7 +211,7 @@ function handleTimeout() {
         if (nextCity) {
             handleAreaCardClick(nextCity);
         } else {
-            showVictoryScreen();
+            endGame(false); // False means not all succeeded, but term finished
         }
     }, 1500);
 }
@@ -219,6 +220,8 @@ function handleTimeout() {
 // GAMEPLAY LOGIC
 // =============================================================
 function handleAreaCardClick(name) {
+    if (cityState.isGameOver) return;
+    
     const area = cityState.areas[name];
     if (!area || area.solved) return;
     
@@ -243,7 +246,7 @@ function handleAreaCardClick(name) {
 
 function showCityToast(name, area) {
     const toast = document.getElementById('city-toast');
-    if (!toast) return;
+    if (!toast || cityState.isGameOver) return;
     
     let floodText = area.flood > 70 ? "severe flooding" : area.flood > 40 ? "moderate flooding" : "minor drainage issues";
     let trafficText = area.traffic > 80 ? "complete gridlock" : area.traffic > 60 ? "heavy congestion" : "smooth traffic";
@@ -314,6 +317,7 @@ function renderAreaCards() {
 }
 
 function appendChip(text) {
+    if (cityState.isGameOver) return;
     const input = document.getElementById('proposal-input');
     if (!input) return;
     const existing = input.value.trim();
@@ -327,6 +331,7 @@ function appendChip(text) {
 }
 
 function selectArea(name, fromUI = false) {
+    if (cityState.isGameOver) return;
     const area = cityState.areas[name];
     if (!area || area.solved) return; 
 
@@ -349,6 +354,8 @@ function selectArea(name, fromUI = false) {
 }
 
 function evaluateProposal() {
+    if (cityState.isGameOver) return;
+    
     const text = document.getElementById('proposal-input').value.toLowerCase();
     if (!cityState.selectedArea) { 
         alert("Please select a city first!"); 
@@ -399,10 +406,18 @@ function evaluateProposal() {
 }
 
 function approveProposal() {
+    if (cityState.isGameOver) return;
     if (!currentProposal) return;
+    
     const area = cityState.areas[cityState.selectedArea];
+    
+    // NEW: BANKRUPTCY CHECK
     if (cityState.budget < currentProposal.cost) { 
-        document.getElementById('advisor-response').innerHTML = `<span style="color:#ef4444; font-weight:bold;">❌ INSUFFICIENT FUNDS!</span>`; 
+        stopTimer();
+        document.getElementById('advisor-response').innerHTML = `<span style="color:#ef4444; font-weight:bold;">❌ INSUFFICIENT FUNDS!</span>`;
+        
+        // Trigger Game Over
+        endGame(true);
         return; 
     }
     
@@ -446,16 +461,41 @@ function approveProposal() {
                 approveBtn.innerText = "✍️ Sign & Approve Resolution";
                 handleAreaCardClick(nextCity);
             } else {
-                showVictoryScreen();
+                endGame(false); // Term ended successfully
             }
         }, 1500);
 
     }, 800); 
 }
 
-function showVictoryScreen() {
+// NEW: Unified Game Over / End Screen Logic
+function endGame(isBankrupt) {
+    cityState.isGameOver = true;
+    stopTimer();
     document.getElementById('final-score').innerText = cityState.score;
-    document.getElementById('victory-screen').style.display = 'flex';
+    
+    const screen = document.getElementById('victory-screen');
+    const title = screen.querySelector('h1');
+    const desc = screen.querySelector('p');
+    
+    if (isBankrupt) {
+        title.innerText = "💥 GAME OVER - BANKRUPT!";
+        title.style.color = "#ef4444";
+        desc.innerHTML = "You ran out of funds and could not afford the resolution. The city council has removed you from office. You failed to complete your term.";
+    } else {
+        const solvedCount = Object.values(cityState.areas).filter(a => a.solved).length;
+        if (solvedCount >= 10) {
+            title.innerText = "🏆 TERM COMPLETED!";
+            title.style.color = "#d4af37";
+            desc.innerHTML = "You successfully managed all 10 cities and completed your term within the budget. The citizens thank you!";
+        } else {
+            title.innerText = "📉 TERM ENDED";
+            title.style.color = "#f59e0b";
+            desc.innerHTML = "You ran out of time and completed your term with mixed results. The citizens are disappointed.";
+        }
+    }
+    
+    screen.style.display = 'flex';
 }
 
 function updateDashboard() {
@@ -662,7 +702,7 @@ window.onload = function() {
             
             const firstUnsolved = Object.keys(cityState.areas).find(k => !cityState.areas[k].solved);
             if(firstUnsolved) handleAreaCardClick(firstUnsolved);
-            else showVictoryScreen();
+            else endGame(false);
             
             setTimeout(() => { map.invalidateSize(); renderAreaCards(); }, 250);
             return; 
@@ -697,6 +737,7 @@ function showFloatingText(text, color) {
 }
 
 function simulateWhatIf(type) {
+    if (cityState.isGameOver) return;
     if (!cityState.selectedArea) { alert("Please select an area on the map first!"); return; }
     const area = cityState.areas[cityState.selectedArea]; const resultBox = document.getElementById('what-if-result'); resultBox.style.display = 'block';
     if (type === 'metro') { resultBox.innerHTML = `<strong>🚇 Metro Extension</strong><br>Cost: ₹45 Cr<br>Traffic Impact: -25 points<br>Flood Impact: 0 points<br><em>Budget after: ₹${cityState.budget - 45} Cr</em>`; document.getElementById('proposal-input').value = "metro extension"; } 
