@@ -1,7 +1,6 @@
 // === STATE ===
-const GAME_VERSION = "1.0.26"; 
+const GAME_VERSION = "1.0.27"; 
 
-// MASTER LIST OF ALL 15 CITIES
 const MASTER_CITIES = {
     Velachery:  { flood: 80, traffic: 60, solved: false },
     Vadapalani: { flood: 35, traffic: 75, solved: false },
@@ -21,8 +20,8 @@ const MASTER_CITIES = {
 };
 
 const cityState = {
-    budget: 200, happiness: 65, selectedArea: null,
-    areas: {} // Will be filled by the selection process
+    budget: 200, happiness: 65, score: 0, selectedArea: null,
+    areas: {} 
 };
 
 const locations = [ 
@@ -57,6 +56,11 @@ let infrastructureLayer;
 let toastTimeout; 
 let selectedCitiesForGame = []; 
 
+// TIMER VARIABLES
+let timeLeft = 45;
+let timerInterval = null;
+let activeCityForTimer = null;
+
 // =============================================================
 // CITY SELECTION LOGIC
 // =============================================================
@@ -82,11 +86,9 @@ function toggleCitySelection(name) {
     const card = document.getElementById(cardId);
     
     if (selectedCitiesForGame.includes(name)) {
-        // Deselect
         selectedCitiesForGame = selectedCitiesForGame.filter(c => c !== name);
         card.classList.remove('selected');
     } else {
-        // Select (Max 10)
         if (selectedCitiesForGame.length >= 10) {
             alert("You can only select 10 cities!");
             return;
@@ -95,11 +97,9 @@ function toggleCitySelection(name) {
         card.classList.add('selected');
     }
     
-    // Update Counter
     const counter = document.getElementById('selection-counter');
     counter.innerText = `Selected: ${selectedCitiesForGame.length} / 10`;
     
-    // Enable Start Button if exactly 10
     const btn = document.getElementById('start-game-btn');
     btn.disabled = selectedCitiesForGame.length !== 10;
     
@@ -131,13 +131,88 @@ function startGameWithSelection() {
     if(budgetSpan) budgetSpan.innerText = `₹${cityState.budget} Cr`;
     const happSpan = document.getElementById('happiness');
     if(happSpan) happSpan.innerText = `${cityState.happiness}%`;
+    document.getElementById('score-display').innerText = cityState.score;
 
-    saveGame(); // Save immediately so they don't have to re-pick on refresh
+    saveGame(); 
     
     setTimeout(() => { 
         map.invalidateSize(); 
         renderAreaCards(); 
+        const firstUnsolved = Object.keys(cityState.areas).find(k => !cityState.areas[k].solved);
+        if(firstUnsolved) handleAreaCardClick(firstUnsolved);
     }, 250);
+}
+
+// =============================================================
+// TIMER LOGIC
+// =============================================================
+function startTimer(cityName) {
+    if (activeCityForTimer === cityName && timerInterval) return;
+    if (timerInterval) clearInterval(timerInterval);
+    
+    activeCityForTimer = cityName;
+    timeLeft = 45;
+    
+    const timerDisplay = document.getElementById('timer-display');
+    timerDisplay.innerText = `45s`;
+    timerDisplay.classList.remove('timer-danger');
+    
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        timerDisplay.innerText = `${timeLeft}s`;
+        
+        if (timeLeft <= 10) {
+            timerDisplay.classList.add('timer-danger');
+        }
+        
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            handleTimeout();
+        }
+    }, 1000);
+}
+
+function stopTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = null;
+    activeCityForTimer = null;
+    document.getElementById('timer-display').innerText = '--';
+    document.getElementById('timer-display').classList.remove('timer-danger');
+}
+
+function handleTimeout() {
+    const failedCity = activeCityForTimer;
+    if (!failedCity) return;
+
+    cityState.score -= 20;
+    document.getElementById('score-display').innerText = cityState.score;
+    
+    const toast = document.getElementById('city-toast');
+    toast.innerHTML = `
+        <div style="font-size: 24px;">❌</div>
+        <div>
+            <strong style="color: #ef4444; font-size: 15px; display: block; margin-bottom: 4px;">TIME'S UP!</strong>
+            <span style="color: #cbd5e1; font-size: 13px; line-height: 1.4;">
+                You failed to fix ${failedCity} in time. -20 Score.
+            </span>
+        </div>
+    `;
+    toast.style.borderLeftColor = '#ef4444';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+
+    cityState.areas[failedCity].solved = true; 
+    saveGame();
+    renderAreaCards();
+
+    setTimeout(() => {
+        const nextCity = Object.keys(cityState.areas).find(k => !cityState.areas[k].solved);
+        if (nextCity) {
+            handleAreaCardClick(nextCity);
+        } else {
+            showVictoryScreen();
+        }
+    }, 1500);
 }
 
 // =============================================================
@@ -145,7 +220,7 @@ function startGameWithSelection() {
 // =============================================================
 function handleAreaCardClick(name) {
     const area = cityState.areas[name];
-    if (!area) return;
+    if (!area || area.solved) return;
     
     if (map) {
         const loc = locations.find(l => l.name === name);
@@ -160,7 +235,10 @@ function handleAreaCardClick(name) {
         panel.innerHTML = `<strong>${name}</strong><br>Flood Severity: ${area.flood}/100<br>Traffic: ${area.traffic}/100`;
     }
 
-    if (!area.solved) { showCityToast(name, area); }
+    if (!area.solved) { 
+        showCityToast(name, area); 
+        startTimer(name); 
+    }
 }
 
 function showCityToast(name, area) {
@@ -175,7 +253,7 @@ function showCityToast(name, area) {
         <div>
             <strong style="color: #f8fafc; font-size: 15px; display: block; margin-bottom: 4px;">${name} City Report</strong>
             <span style="color: #cbd5e1; font-size: 13px; line-height: 1.4;">
-                Reports indicate ${floodText} (Flood: ${area.flood}/100) and ${trafficText} (Traffic: ${area.traffic}/100).
+                Reports indicate ${floodText} (Flood: ${area.flood}/100) and ${trafficText} (Traffic: ${area.traffic}/100). You have 45 seconds!
             </span>
         </div>
     `;
@@ -206,7 +284,7 @@ function renderAreaCards() {
 
         let tag = '';
         if (a.solved) {
-            tag = `<span class="area-solved-tag">APPROVED</span>`;
+            tag = `<span class="area-solved-tag">RESOLVED</span>`;
         } else if (isSelected) {
             tag = `<span class="area-solved-tag" style="color:#3b82f6; border-color:#3b82f6;">Selected</span>`;
         }
@@ -328,6 +406,8 @@ function approveProposal() {
         return; 
     }
     
+    stopTimer();
+
     const stamp = document.getElementById('draft-stamp');
     stamp.classList.add('slam');
     const approveBtn = document.getElementById('approve-btn');
@@ -346,8 +426,12 @@ function approveProposal() {
         if (currentProposal.keywords.includes('metro')) happinessBonus = 5;  
         cityState.happiness = Math.min(100, cityState.happiness + happinessBonus);
         
+        cityState.score += 50;
+        document.getElementById('score-display').innerText = cityState.score;
+
         showFloatingText(`-₹${currentProposal.cost} Cr`, '#ef4444'); 
         showFloatingText(`+${happinessBonus}% Happiness`, '#10b981');
+        showFloatingText(`+50 PTS`, '#facc15');
         
         updateDashboard(); 
         renderCityInfrastructure();
@@ -355,10 +439,23 @@ function approveProposal() {
         
         document.getElementById('advisor-response').innerHTML += `<br><br><span style="color:#4ade80">✔ Resolution signed! Budget: ₹${cityState.budget} Cr</span>`;
         document.getElementById('proposal-input').value = '';
-        approveBtn.innerText = "✅ Implemented";
+        
+        setTimeout(() => {
+            const nextCity = Object.keys(cityState.areas).find(k => !cityState.areas[k].solved);
+            if (nextCity) {
+                approveBtn.innerText = "✍️ Sign & Approve Resolution";
+                handleAreaCardClick(nextCity);
+            } else {
+                showVictoryScreen();
+            }
+        }, 1500);
 
-        checkWinCondition(); 
     }, 800); 
+}
+
+function showVictoryScreen() {
+    document.getElementById('final-score').innerText = cityState.score;
+    document.getElementById('victory-screen').style.display = 'flex';
 }
 
 function updateDashboard() {
@@ -381,7 +478,7 @@ function updateDashboard() {
 
     const goalCounter = document.getElementById('goal-counter');
     if (goalCounter) {
-        goalCounter.innerText = `Saved: ${solvedCount} / 10`;
+        goalCounter.innerText = `Processed: ${solvedCount} / 10`;
         if (solvedCount >= 10) {
             goalCounter.style.color = '#10b981';
             goalCounter.style.borderColor = '#10b981';
@@ -393,7 +490,7 @@ function updateDashboard() {
         if (cityState.areas[name].solved && mapMarkers[name]) {
             mapMarkers[name].setIcon(L.divIcon({
                 className: 'custom-div-icon',
-                html: `<div class='map-marker solved'>📍 ${name}<div class='map-stamp-text'>APPROVED</div></div>`,
+                html: `<div class='map-marker solved'>📍 ${name}<div class='map-stamp-text'>RESOLVED</div></div>`,
                 iconSize: [120, 50], iconAnchor: [60, 25]
             }));
         }
@@ -561,8 +658,12 @@ window.onload = function() {
             if(budgetSpan) budgetSpan.innerText = `₹${cityState.budget} Cr`;
             const happSpan = document.getElementById('happiness');
             if(happSpan) happSpan.innerText = `${cityState.happiness}%`;
+            document.getElementById('score-display').innerText = cityState.score;
             
-            checkWinCondition(); 
+            const firstUnsolved = Object.keys(cityState.areas).find(k => !cityState.areas[k].solved);
+            if(firstUnsolved) handleAreaCardClick(firstUnsolved);
+            else showVictoryScreen();
+            
             setTimeout(() => { map.invalidateSize(); renderAreaCards(); }, 250);
             return; 
         } else {
@@ -579,15 +680,21 @@ function saveGame() {
     localStorage.setItem('twinCityState', JSON.stringify(cityState)); 
 }
 
-function checkWinCondition() { 
-    const solvedCount = Object.values(cityState.areas).filter(a => a.solved).length;
-    if (solvedCount >= 10) { 
-        setTimeout(() => { document.getElementById('victory-screen').style.display = 'flex'; }, 1000); 
-    } 
+function resetGame() { 
+    localStorage.removeItem('twinCityState'); 
+    location.reload(); 
 }
 
-function resetGame() { localStorage.removeItem('twinCityState'); location.reload(); }
-function showFloatingText(text, color) { const el = document.createElement('div'); el.className = 'floating-text'; el.textContent = text; el.style.color = color; el.style.left = '60%'; el.style.top = '40%'; document.body.appendChild(el); setTimeout(() => el.remove(), 1500); }
+function showFloatingText(text, color) { 
+    const el = document.createElement('div'); 
+    el.className = 'floating-text'; 
+    el.textContent = text; 
+    el.style.color = color; 
+    el.style.left = '60%'; 
+    el.style.top = '40%'; 
+    document.body.appendChild(el); 
+    setTimeout(() => el.remove(), 1500); 
+}
 
 function simulateWhatIf(type) {
     if (!cityState.selectedArea) { alert("Please select an area on the map first!"); return; }
