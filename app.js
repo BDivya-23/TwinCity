@@ -1,42 +1,54 @@
 // === STATE ===
 const cityState = {
-    budget: 100, happiness: 85, selectedArea: null,
+    budget: 250, happiness: 65, selectedArea: null, // Increased budget to accommodate 10 areas
     areas: {
         Velachery:  { flood: 80, traffic: 60, solved: false },
         Vadapalani: { flood: 35, traffic: 75, solved: false },
-        Porur:      { flood: 45, traffic: 70, solved: false }
+        Porur:      { flood: 45, traffic: 70, solved: false },
+        ECR:        { flood: 60, traffic: 40, solved: false },
+        "T. Nagar": { flood: 25, traffic: 85, solved: false },
+        "Anna Salai": { flood: 30, traffic: 90, solved: false },
+        Ramapuram:  { flood: 55, traffic: 65, solved: false },
+        Koyambedu:  { flood: 40, traffic: 80, solved: false },
+        "Tidel Park": { flood: 70, traffic: 50, solved: false },
+        Tambaram:   { flood: 50, traffic: 75, solved: false }
     }
 };
 
 const locations = [ 
     { name: 'Velachery', coords: [12.9750, 80.2210] }, 
     { name: 'Vadapalani', coords: [13.0503, 80.2121] }, 
-    { name: 'Porur', coords: [13.0358, 80.1568] } 
+    { name: 'Porur', coords: [13.0358, 80.1568] },
+    { name: 'ECR', coords: [12.9850, 80.2600] },
+    { name: 'T. Nagar', coords: [13.0400, 80.2350] },
+    { name: 'Anna Salai', coords: [13.0600, 80.2700] },
+    { name: 'Ramapuram', coords: [13.0300, 80.1800] },
+    { name: 'Koyambedu', coords: [13.0700, 80.1950] },
+    { name: 'Tidel Park', coords: [12.9900, 80.2450] },
+    { name: 'Tambaram', coords: [12.9200, 80.1200] }
 ];
 
 const advisorRules = [
-    { keywords: ['drain', 'water', 'flood'], cost: 20, impact: 30, text: "Drainage system: reduces flooding significantly. Estimated cost: ₹20 crore. May cause 3 months of local disruption." },
-    { keywords: ['metro', 'train', 'transport'], cost: 40, impact: 25, text: "Metro extension: improves connectivity and traffic. Estimated cost: ₹40 crore. High construction impact." },
-    { keywords: ['park', 'green', 'tree'], cost: 10, impact: 10, text: "Green spaces: improves citizen happiness. Estimated cost: ₹10 crore. Minor flood benefit." },
-    { keywords: ['road', 'pothole'], cost: 15, impact: 15, text: "Road repairs: improves accessibility. Estimated cost: ₹15 crore." }
+    { keywords: ['drain', 'water', 'flood'], cost: 25, impact: 30, text: "Drainage system: reduces flooding significantly. Estimated cost: ₹25 crore. May cause 3 months of local disruption." },
+    { keywords: ['metro', 'train', 'transport'], cost: 45, impact: 25, text: "Metro extension: improves connectivity and traffic. Estimated cost: ₹45 crore. High construction impact." },
+    { keywords: ['park', 'green', 'tree'], cost: 15, impact: 10, text: "Green spaces: improves citizen happiness. Estimated cost: ₹15 crore. Minor flood benefit." },
+    { keywords: ['road', 'pothole', 'flyover', 'bridge'], cost: 20, impact: 15, text: "Road repairs & infrastructure: improves accessibility. Estimated cost: ₹20 crore." }
 ];
 
 let currentProposal = null;
 let map;
 let mapMarkers = {}; 
-let infrastructureLayer; // Layer group for Map Transformations
+let infrastructureLayer; 
 
 // =============================================================
 // PER-AREA MINI-CARDS & MAP ZOOM
 // =============================================================
 function handleAreaCardClick(name) {
-    // 1. Cinematic Map Fly-To
     if (map) {
         const loc = locations.find(l => l.name === name);
         if (loc) map.flyTo(loc.coords, 15, { duration: 1.5 });
     }
 
-    // 2. Update State & UI
     if (typeof selectArea === 'function') {
         selectArea(name, true); 
     }
@@ -130,7 +142,7 @@ function selectArea(name, fromUI = false) {
     cityState.selectedArea = name;
     
     const rainOverlay = document.getElementById('rain-overlay');
-    if (name === 'Velachery') {
+    if (name === 'Velachery' || name === 'ECR' || name === 'Tidel Park') {
         rainOverlay.style.display = 'block';
     } else {
         rainOverlay.style.display = 'none';
@@ -142,9 +154,7 @@ function selectArea(name, fromUI = false) {
     document.getElementById('what-if-result').style.display = 'none';
     document.getElementById('approve-btn').disabled = true;
 
-    if (!fromUI) {
-        renderAreaCards(); // Update cards if clicked via map pin
-    }
+    if (!fromUI) { renderAreaCards(); }
 }
 
 function evaluateProposal() {
@@ -181,10 +191,9 @@ function evaluateProposal() {
         avatar.src = "https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=10b981"; 
         avatar.style.borderColor = "#10b981";
 
-        // Populate Draft Document
         document.getElementById('draft-subject').innerText = matched.text.split(':')[0];
         document.getElementById('draft-cost').innerText = `₹${matched.cost} Crore`;
-        document.getElementById('draft-impact').innerText = `Reduce Flood Risk by ${matched.impact} points.`;
+        document.getElementById('draft-impact').innerText = `Reduce Risk by ${matched.impact} points.`;
         
         draftBox.style.display = 'block';
         approveBtn.disabled = false;
@@ -211,7 +220,6 @@ function approveProposal() {
         return; 
     }
     
-    // 1. Play Stamp Animation
     const stamp = document.getElementById('draft-stamp');
     stamp.classList.add('slam');
     
@@ -219,7 +227,6 @@ function approveProposal() {
     approveBtn.disabled = true;
     approveBtn.innerText = "Processing...";
 
-    // 2. Apply Logic after stamp lands
     setTimeout(() => {
         cityState.budget -= currentProposal.cost;
         area.flood = 0; 
@@ -256,16 +263,6 @@ function updateDashboard() {
     renderAreaCards();
 
     for (let name in cityState.areas) {
-        if (cityState.areas[name].solved) {
-            const badge = document.getElementById(`badge-${name.toLowerCase()}`);
-            if (badge) {
-                badge.classList.remove('badge-locked');
-                badge.classList.add('badge-unlocked');
-            }
-        }
-    }
-
-    for (let name in cityState.areas) {
         if (cityState.areas[name].solved && mapMarkers[name]) {
             mapMarkers[name].setIcon(L.divIcon({
                 className: 'custom-div-icon',
@@ -279,7 +276,7 @@ function updateDashboard() {
 
 function renderDonut() {
     const remaining = cityState.budget;
-    const total = 100;
+    const total = 250; // Updated to match new total budget
     const spent = Math.max(0, total - remaining);
     const circumference = 2 * Math.PI * 50;
 
@@ -300,7 +297,7 @@ function renderDonut() {
     const amountEl = document.getElementById('donut-amount');
     if (amountEl) {
         amountEl.textContent = '₹' + remaining;
-        amountEl.style.color = remaining < 30 ? '#ef4444' : '#10b981';
+        amountEl.style.color = remaining < 50 ? '#ef4444' : '#10b981';
     }
 
     const legendRem = document.getElementById('legend-remaining');
@@ -360,27 +357,64 @@ function renderCityInfrastructure() {
 
     infrastructureLayer.clearLayers(); 
 
+    // 1. VADAPALANI: METRO LINE
     if (cityState.areas['Vadapalani'].solved) {
         const metroCoords = [ [13.0503, 80.2121], [13.0450, 80.2200], [13.0400, 80.2350], [13.0350, 80.2500] ];
-        const metroLine = L.polyline(metroCoords, {
-            color: '#3b82f6', weight: 6, opacity: 0.9, dashArray: '10, 10', lineCap: 'round', className: 'metro-line-anim'
-        }).addTo(infrastructureLayer);
-        L.circleMarker([13.0503, 80.2121], { radius: 6, color: '#fff', weight: 2, fillColor: '#3b82f6', fillOpacity: 1 }).addTo(infrastructureLayer);
-        metroLine.bindTooltip("🚇 New Metro Extension", { permanent: true, direction: "right", className: 'map-tooltip' });
+        L.polyline(metroCoords, { color: '#3b82f6', weight: 6, opacity: 0.9, dashArray: '10, 10', lineCap: 'round', className: 'metro-line-anim' }).addTo(infrastructureLayer).bindTooltip("🚇 New Metro Extension", { permanent: true, direction: "right", className: 'map-tooltip' });
     }
 
+    // 2. VELACHERY: FLOOD PARK
     if (cityState.areas['Velachery'].solved) {
         const parkCoords = [ [12.9800, 80.2150], [12.9780, 80.2210], [12.9720, 80.2220], [12.9710, 80.2160], [12.9750, 80.2130] ];
-        L.polygon(parkCoords, {
-            color: '#10b981', weight: 2, fillColor: '#10b981', fillOpacity: 0.4, className: 'park-fade-in'
-        }).addTo(infrastructureLayer).bindTooltip("🌳 Flood Absorption Park", { permanent: true, direction: "center", className: 'map-tooltip' });
+        L.polygon(parkCoords, { color: '#10b981', weight: 2, fillColor: '#10b981', fillOpacity: 0.4, className: 'park-fade-in' }).addTo(infrastructureLayer).bindTooltip("🌳 Flood Absorption Park", { permanent: true, direction: "center", className: 'map-tooltip' });
     }
 
+    // 3. PORUR: RING ROAD
     if (cityState.areas['Porur'].solved) {
         const ringRoadCoords = [ [13.0358, 80.1568], [13.0450, 80.1400], [13.0600, 80.1450], [13.0700, 80.1600], [13.0600, 80.1800], [13.0400, 80.1800], [13.0358, 80.1568] ];
-        L.polyline(ringRoadCoords, {
-            color: '#f59e0b', weight: 8, opacity: 0.8, lineCap: 'round', lineJoin: 'round'
-        }).addTo(infrastructureLayer).bindTooltip("🛣️ New Porur Bypass", { permanent: true, direction: "center", className: 'map-tooltip' });
+        L.polyline(ringRoadCoords, { color: '#f59e0b', weight: 8, opacity: 0.8, lineCap: 'round', lineJoin: 'round' }).addTo(infrastructureLayer).bindTooltip("🛣️ New Porur Bypass", { permanent: true, direction: "center", className: 'map-tooltip' });
+    }
+
+    // 4. ECR: COASTAL WALKWAY
+    if (cityState.areas['ECR'].solved) {
+        const ecrCoords = [ [12.9850, 80.2600], [12.9700, 80.2650], [12.9500, 80.2700] ];
+        L.polyline(ecrCoords, { color: '#0ea5e9', weight: 5, opacity: 0.8, dashArray: '5, 10' }).addTo(infrastructureLayer).bindTooltip("🏖️ Coastal Walkway", { permanent: true, direction: "right", className: 'map-tooltip' });
+    }
+
+    // 5. T. NAGAR: FLYOVER
+    if (cityState.areas['T. Nagar'].solved) {
+        const flyoverCoords = [ [13.0350, 80.2300], [13.0400, 80.2350], [13.0450, 80.2400] ];
+        L.polyline(flyoverCoords, { color: '#a855f7', weight: 7, opacity: 0.9 }).addTo(infrastructureLayer).bindTooltip("🌉 T.Nagar Flyover", { permanent: true, direction: "top", className: 'map-tooltip' });
+    }
+
+    // 6. ANNA SALAI: WIDENED CORRIDOR
+    if (cityState.areas['Anna Salai'].solved) {
+        const annaSalaiCoords = [ [13.0600, 80.2700], [13.0700, 80.2750], [13.0800, 80.2800] ];
+        L.polyline(annaSalaiCoords, { color: '#10b981', weight: 9, opacity: 0.8 }).addTo(infrastructureLayer).bindTooltip("🛣️ Anna Salai Corridor", { permanent: true, direction: "top", className: 'map-tooltip' });
+    }
+
+    // 7. RAMAPURAM: SUBWAY
+    if (cityState.areas['Ramapuram'].solved) {
+        const subwayCoords = [ [13.0300, 80.1800], [13.0330, 80.1830] ];
+        L.polyline(subwayCoords, { color: '#64748b', weight: 8, opacity: 0.9 }).addTo(infrastructureLayer).bindTooltip("🚇 Ramapuram Subway", { permanent: true, direction: "bottom", className: 'map-tooltip' });
+    }
+
+    // 8. KOYAMBEDU: FLYOVER
+    if (cityState.areas['Koyambedu'].solved) {
+        const koyambeduCoords = [ [13.0700, 80.1950], [13.0750, 80.2000] ];
+        L.polyline(koyambeduCoords, { color: '#a855f7', weight: 7, opacity: 0.9 }).addTo(infrastructureLayer).bindTooltip("🌉 Koyambedu Flyover", { permanent: true, direction: "top", className: 'map-tooltip' });
+    }
+
+    // 9. TIDEL PARK: IT CORRIDOR
+    if (cityState.areas['Tidel Park'].solved) {
+        const tidelCoords = [ [12.9900, 80.2450], [12.9880, 80.2480] ];
+        L.polygon(tidelCoords, { color: '#06b6d4', weight: 2, fillColor: '#06b6d4', fillOpacity: 0.5 }).addTo(infrastructureLayer).bindTooltip("💻 IT Park Corridor", { permanent: true, direction: "center", className: 'map-tooltip' });
+    }
+
+    // 10. TAMBARAM: RAILWAY UPGRADE
+    if (cityState.areas['Tambaram'].solved) {
+        const tambaramCoords = [ [12.9200, 80.1200], [12.9250, 80.1250], [12.9300, 80.1300] ];
+        L.polyline(tambaramCoords, { color: '#3b82f6', weight: 6, opacity: 0.9, dashArray: '10, 10' }).addTo(infrastructureLayer).bindTooltip("🚆 Tambaram Rail Upgrade", { permanent: true, direction: "right", className: 'map-tooltip' });
     }
 }
 
@@ -453,13 +487,13 @@ function showFloatingText(text, color) { const el = document.createElement('div'
 function simulateWhatIf(type) {
     if (!cityState.selectedArea) { alert("Please select an area on the map first!"); return; }
     const area = cityState.areas[cityState.selectedArea]; const resultBox = document.getElementById('what-if-result'); resultBox.style.display = 'block';
-    if (type === 'metro') { resultBox.innerHTML = `<strong>🚇 Metro Extension</strong><br>Cost: ₹40 Cr<br>Traffic Impact: -25 points<br>Flood Impact: 0 points<br><em>Budget after: ₹${cityState.budget - 40} Cr</em>`; document.getElementById('proposal-input').value = "metro extension"; } 
-    else if (type === 'drainage') { const floodReduction = area.flood > 50 ? "High" : "Medium"; resultBox.innerHTML = `<strong>🌊 Drainage System</strong><br>Cost: ₹20 Cr<br>Flood Impact: -30 points (${floodReduction})<br>Traffic Impact: 0 points<br><em>Budget after: ₹${cityState.budget - 20} Cr</em>`; document.getElementById('proposal-input').value = "drainage system"; }
+    if (type === 'metro') { resultBox.innerHTML = `<strong>🚇 Metro Extension</strong><br>Cost: ₹45 Cr<br>Traffic Impact: -25 points<br>Flood Impact: 0 points<br><em>Budget after: ₹${cityState.budget - 45} Cr</em>`; document.getElementById('proposal-input').value = "metro extension"; } 
+    else if (type === 'drainage') { const floodReduction = area.flood > 50 ? "High" : "Medium"; resultBox.innerHTML = `<strong>🌊 Drainage System</strong><br>Cost: ₹25 Cr<br>Flood Impact: -30 points (${floodReduction})<br>Traffic Impact: 0 points<br><em>Budget after: ₹${cityState.budget - 25} Cr</em>`; document.getElementById('proposal-input').value = "drainage system"; }
     evaluateProposal(); 
 }
 
 function initMap() {
-    map = L.map('map', { dragging: true, zoomControl: true }).setView([13.0500, 80.2100], 12);
+    map = L.map('map', { dragging: true, zoomControl: true }).setView([13.0500, 80.2100], 11); // Slightly zoomed out start
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
     
     locations.forEach(loc => {
