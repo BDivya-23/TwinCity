@@ -43,7 +43,7 @@ function animateValue(id, start, end, duration, prefix = "", suffix = "") {
 }
 
 // =============================================================
-// FEATURE 2: PER-AREA MINI-CARDS
+// PER-AREA MINI-CARDS (With Red Approved Stamp)
 // =============================================================
 function renderAreaCards() {
     const container = document.getElementById('area-cards-container');
@@ -66,9 +66,9 @@ function renderAreaCards() {
 
         let tag = '';
         if (a.solved) {
-            tag = `<span class="area-solved-tag">✅ Solved</span>`;
+            tag = `<span class="area-solved-tag">APPROVED</span>`;
         } else if (isSelected) {
-            tag = `<span class="area-solved-tag">Selected</span>`;
+            tag = `<span class="area-solved-tag" style="color:#3b82f6; border-color:#3b82f6;">Selected</span>`;
         }
 
         return `
@@ -99,14 +99,12 @@ function renderAreaCards() {
     }).join('');
 }
 
-/* Handle card clicks (syncs with map and updates cards) */
 function handleAreaCardClick(name) {
     if (typeof selectArea === 'function') {
         selectArea(name);
     }
     renderAreaCards();
     
-    // Keep hidden problem-panel in sync for old logic
     const panel = document.getElementById('problem-panel');
     if (panel) {
         const a = cityState.areas[name];
@@ -114,24 +112,17 @@ function handleAreaCardClick(name) {
     }
 }
 
-// =============================================================
-// FEATURE 5: QUICK-ACTION CHIPS
-// =============================================================
 function appendChip(text) {
     const input = document.getElementById('proposal-input');
     if (!input) return;
 
     const existing = input.value.trim();
-    
-    // Append logic: prevent duplicates, add comma if text exists
     if (!existing) {
         input.value = text;
     } else {
         if (existing.toLowerCase().includes(text.toLowerCase())) return;
         input.value = existing + ', ' + text;
     }
-
-    // Focus and move cursor to the end
     input.focus();
     input.setSelectionRange(input.value.length, input.value.length);
 }
@@ -143,7 +134,6 @@ function selectArea(name) {
 
     cityState.selectedArea = name;
     
-    // Trigger Rain for Velachery
     const rainOverlay = document.getElementById('rain-overlay');
     if (name === 'Velachery') {
         rainOverlay.style.display = 'block';
@@ -220,7 +210,6 @@ function approveProposal() {
     document.getElementById('approve-btn').disabled = true;
     document.getElementById('advisor-response').innerHTML += `<br><br><span style="color:#4ade80">✔ Implemented! Budget: ₹${cityState.budget} Cr</span>`;
     
-    // Clear the input after successful approval
     document.getElementById('proposal-input').value = '';
 
     checkWinCondition(); 
@@ -247,14 +236,18 @@ function updateDashboard() {
         }
     }
 
-    // Map Markers
+    // Map Markers (Now with Red Stamp)
     for (let name in cityState.areas) {
         if (cityState.areas[name].solved && mapMarkers[name]) {
-            mapMarkers[name].setIcon(L.divIcon({ className: 'custom-div-icon', html: `<div class='map-marker solved'>✅ ${name} (Solved)</div>`, iconSize: [150, 30], iconAnchor: [75, 15] }));
+            mapMarkers[name].setIcon(L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div class='map-marker solved'>📍 ${name}<div class='map-stamp-text'>APPROVED</div></div>`,
+                iconSize: [120, 50],
+                iconAnchor: [60, 25]
+            }));
         }
     }
 
-    // Render the cards
     renderAreaCards();
 }
 
@@ -276,7 +269,7 @@ window.onload = function() {
     checkWinCondition(); 
     setTimeout(() => { 
         map.invalidateSize(); 
-        renderAreaCards(); // Bootstrap cards after layout settles
+        renderAreaCards(); 
     }, 250);
 };
 
