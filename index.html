@@ -28,6 +28,18 @@
 
         <h2>City Status</h2>
         
+        <!-- NEW: SCORE & TIMER SECTION -->
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <div class="stat" style="flex: 1; margin-bottom: 0;">
+                <span>🏆 Score</span>
+                <span id="score-display" style="color: #facc15;">0</span>
+            </div>
+            <div class="stat" style="flex: 1; margin-bottom: 0; border-color: #ef4444;">
+                <span>⏱️ Time Left</span>
+                <span id="timer-display" style="color: #10b981; font-size: 18px;">--</span>
+            </div>
+        </div>
+
         <div id="budget-section">
             <div id="budget-donut-wrap">
                 <svg id="budget-donut" viewBox="0 0 120 120" width="120" height="120">
@@ -169,8 +181,9 @@
     <!-- VICTORY SCREEN -->
     <div id="victory-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(10, 22, 40, 0.95); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(10px);">
         <div style="background: #1e293b; padding: 40px; border-radius: 15px; text-align: center; border: 2px solid #d4af37; box-shadow: 0 0 50px rgba(212, 175, 55, 0.3); max-width: 500px;">
-            <h1 style="color: #d4af37; font-size: 36px; margin-bottom: 10px;">🏆 MISSION ACCOMPLISHED!</h1>
-            <p style="font-size: 16px; color: #cbd5e1; line-height: 1.6; margin-bottom: 25px;">You have strategically saved all 10 chosen cities in Chennai within your budget! The citizens thank you, Mayor.</p>
+            <h1 style="color: #d4af37; font-size: 36px; margin-bottom: 10px;">🏆 TERM COMPLETED!</h1>
+            <p style="font-size: 16px; color: #cbd5e1; line-height: 1.6; margin-bottom: 25px;">You have completed your term as Mayor of Chennai.</p>
+            <h2 style="color: #10b981; font-size: 24px; margin-bottom: 20px;">Final Score: <span id="final-score">0</span></h2>
             <button class="action" style="background: #10b981; font-size: 16px;" onclick="resetGame()">Play Again</button>
         </div>
     </div>
