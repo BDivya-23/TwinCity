@@ -1,5 +1,5 @@
 // === STATE ===
-const GAME_VERSION = "1.0.22"; // Forces cache clear
+const GAME_VERSION = "1.0.24"; // Forces cache clear for the new welcome message
 
 const cityState = {
     budget: 200, happiness: 65, selectedArea: null,
@@ -79,6 +79,7 @@ function handleAreaCardClick(name) {
     }
 }
 
+// NEW: Function to display the City Report
 function showCityToast(name, area) {
     const toast = document.getElementById('city-toast');
     if (!toast) return;
@@ -101,6 +102,33 @@ function showCityToast(name, area) {
     toastTimeout = setTimeout(() => {
         toast.classList.remove('show');
     }, 4000);
+}
+
+// NEW: Function for the Welcome Message on load
+function showWelcomeToast() {
+    const toast = document.getElementById('city-toast');
+    if (!toast) return;
+    
+    toast.innerHTML = `
+        <div style="font-size: 28px;">👋</div>
+        <div>
+            <strong style="color: #f59e0b; font-size: 16px; display: block; margin-bottom: 4px;">Welcome, Mayor!</strong>
+            <span style="color: #cbd5e1; font-size: 13px; line-height: 1.4;">
+                Select <strong>any 10 cities</strong> of your choice and propose solutions within your <strong>₹200 Cr budget</strong>!
+            </span>
+        </div>
+    `;
+    
+    // Change border color to gold for the welcome message
+    toast.style.borderLeftColor = '#f59e0b';
+    toast.classList.add('show');
+    
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+        // Reset border color back to red for future city reports
+        setTimeout(() => { toast.style.borderLeftColor = '#ef4444'; }, 300); 
+    }, 6000); // Shows for 6 seconds
 }
 
 function renderAreaCards() {
@@ -508,8 +536,8 @@ window.onload = function() {
     const happSpan = document.getElementById('happiness');
     if(happSpan) happSpan.innerText = `${cityState.happiness}%`;
 
-    const unsolved = Object.keys(cityState.areas).find(k => !cityState.areas[k].solved);
-    if(unsolved) handleAreaCardClick(unsolved);
+    // Show the Welcome Toast on load instead of auto-selecting a city
+    setTimeout(showWelcomeToast, 500);
 
     checkWinCondition(); 
     setTimeout(() => { 
