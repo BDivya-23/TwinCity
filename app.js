@@ -1,5 +1,5 @@
 // === STATE ===
-const GAME_VERSION = "1.0.18"; // Version control to force cache clear
+const GAME_VERSION = "1.0.20"; // Forces cache clear for the new popup
 
 const cityState = {
     budget: 200, happiness: 65, selectedArea: null,
@@ -56,6 +56,8 @@ let infrastructureLayer;
 // PER-AREA MINI-CARDS & MAP ZOOM
 // =============================================================
 function handleAreaCardClick(name) {
+    const area = cityState.areas[name];
+    
     if (map) {
         const loc = locations.find(l => l.name === name);
         if (loc) map.flyTo(loc.coords, 15, { duration: 1.5 });
@@ -68,9 +70,35 @@ function handleAreaCardClick(name) {
     
     const panel = document.getElementById('problem-panel');
     if (panel) {
-        const a = cityState.areas[name];
-        panel.innerHTML = `<strong>${name}</strong><br>Flood Severity: ${a.flood}/100<br>Traffic: ${a.traffic}/100`;
+        panel.innerHTML = `<strong>${name}</strong><br>Flood Severity: ${area.flood}/100<br>Traffic: ${area.traffic}/100`;
     }
+
+    // Show City Alert Popup (ONLY if not solved)
+    if (!area.solved) {
+        showCityAlert(name, area);
+    }
+}
+
+function showCityAlert(name, area) {
+    document.getElementById('alert-city-name').innerText = `🚨 CITY ALERT: ${name.toUpperCase()}`;
+    
+    // Dynamic Flood Message
+    let floodDesc = area.flood > 70 ? "CRITICAL: Severe waterlogging. Streets are submerged." :
+                    area.flood > 40 ? "WARNING: Moderate flooding reported on main roads." :
+                    "MINOR: Small puddles, but drainage is holding up.";
+    document.getElementById('alert-flood-text').innerHTML = `<strong style="color:#ef4444;">Severity: ${area.flood}/100</strong><br>${floodDesc}`;
+
+    // Dynamic Traffic Message
+    let trafficDesc = area.traffic > 80 ? "CRITICAL: Complete gridlock. Ambulances are stuck." :
+                      area.traffic > 60 ? "WARNING: Heavy congestion during peak hours." :
+                      "MINOR: Smooth flow of traffic.";
+    document.getElementById('alert-traffic-text').innerHTML = `<strong style="color:#f59e0b;">Severity: ${area.traffic}/100</strong><br>${trafficDesc}`;
+
+    document.getElementById('problem-alert-modal').style.display = 'flex';
+}
+
+function closeProblemAlert() {
+    document.getElementById('problem-alert-modal').style.display = 'none';
 }
 
 function renderAreaCards() {
@@ -287,7 +315,6 @@ function updateDashboard() {
         }
     }
 
-    // Update Goal Counter
     const goalCounter = document.getElementById('goal-counter');
     if (goalCounter) {
         goalCounter.innerText = `Saved: ${solvedCount} / 10`;
@@ -312,7 +339,7 @@ function updateDashboard() {
 
 function renderDonut() {
     const remaining = cityState.budget;
-    const total = 200; // Updated to match new starting budget
+    const total = 200; 
     const spent = Math.max(0, total - remaining);
     const circumference = 2 * Math.PI * 50;
 
@@ -528,7 +555,6 @@ function saveGame() {
     localStorage.setItem('twinCityState', JSON.stringify(cityState)); 
 }
 
-// UPDATED WIN CONDITION: Must save 10 cities
 function checkWinCondition() { 
     const solvedCount = Object.values(cityState.areas).filter(a => a.solved).length;
     if (solvedCount >= 10) { 
@@ -557,9 +583,10 @@ function initMap() {
         const customIcon = L.divIcon({ className: 'custom-div-icon', html: `<div class='map-marker'>📍 ${loc.name}</div>`, iconSize: [100, 30], iconAnchor: [50, 15] });
         const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
         mapMarkers[loc.name] = marker;
+        
+        // UPDATED: Map marker clicks now trigger the same alert popup
         marker.on('click', function() { 
-            selectArea(loc.name); 
-            renderAreaCards();
+            handleAreaCardClick(loc.name);
         });
     });
 }
