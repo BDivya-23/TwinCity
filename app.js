@@ -1,25 +1,28 @@
 // === STATE ===
-const GAME_VERSION = "1.0.24"; // Forces cache clear for the new welcome message
+const GAME_VERSION = "1.0.26"; 
+
+// MASTER LIST OF ALL 15 CITIES
+const MASTER_CITIES = {
+    Velachery:  { flood: 80, traffic: 60, solved: false },
+    Vadapalani: { flood: 35, traffic: 75, solved: false },
+    Porur:      { flood: 45, traffic: 70, solved: false },
+    ECR:        { flood: 60, traffic: 40, solved: false },
+    "T. Nagar": { flood: 25, traffic: 85, solved: false },
+    "Anna Salai": { flood: 30, traffic: 90, solved: false },
+    Ramapuram:  { flood: 55, traffic: 65, solved: false },
+    Koyambedu:  { flood: 40, traffic: 80, solved: false },
+    "Tidel Park": { flood: 70, traffic: 50, solved: false },
+    Tambaram:   { flood: 50, traffic: 75, solved: false },
+    Adyar:      { flood: 45, traffic: 65, solved: false },
+    Guindy:     { flood: 30, traffic: 85, solved: false },
+    Chromepet:  { flood: 60, traffic: 55, solved: false },
+    Nungambakkam: { flood: 25, traffic: 80, solved: false },
+    "Besant Nagar": { flood: 50, traffic: 40, solved: false }
+};
 
 const cityState = {
     budget: 200, happiness: 65, selectedArea: null,
-    areas: {
-        Velachery:  { flood: 80, traffic: 60, solved: false },
-        Vadapalani: { flood: 35, traffic: 75, solved: false },
-        Porur:      { flood: 45, traffic: 70, solved: false },
-        ECR:        { flood: 60, traffic: 40, solved: false },
-        "T. Nagar": { flood: 25, traffic: 85, solved: false },
-        "Anna Salai": { flood: 30, traffic: 90, solved: false },
-        Ramapuram:  { flood: 55, traffic: 65, solved: false },
-        Koyambedu:  { flood: 40, traffic: 80, solved: false },
-        "Tidel Park": { flood: 70, traffic: 50, solved: false },
-        Tambaram:   { flood: 50, traffic: 75, solved: false },
-        Adyar:      { flood: 45, traffic: 65, solved: false },
-        Guindy:     { flood: 30, traffic: 85, solved: false },
-        Chromepet:  { flood: 60, traffic: 55, solved: false },
-        Nungambakkam: { flood: 25, traffic: 80, solved: false },
-        "Besant Nagar": { flood: 50, traffic: 40, solved: false }
-    }
+    areas: {} // Will be filled by the selection process
 };
 
 const locations = [ 
@@ -52,21 +55,104 @@ let map;
 let mapMarkers = {}; 
 let infrastructureLayer; 
 let toastTimeout; 
+let selectedCitiesForGame = []; 
 
 // =============================================================
-// PER-AREA MINI-CARDS & MAP ZOOM
+// CITY SELECTION LOGIC
+// =============================================================
+function renderCitySelection() {
+    const grid = document.getElementById('selection-grid');
+    if (!grid) return;
+    
+    grid.innerHTML = Object.keys(MASTER_CITIES).map(name => {
+        return `
+            <div class="select-card" id="select-card-${name.replace(/[^a-zA-Z0-9]/g, '')}" onclick="toggleCitySelection('${name}')">
+                <div class="city-name">${name}</div>
+                <div class="city-stats">
+                    🌊 Flood: ${MASTER_CITIES[name].flood}<br>
+                    🚦 Traffic: ${MASTER_CITIES[name].traffic}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function toggleCitySelection(name) {
+    const cardId = `select-card-${name.replace(/[^a-zA-Z0-9]/g, '')}`;
+    const card = document.getElementById(cardId);
+    
+    if (selectedCitiesForGame.includes(name)) {
+        // Deselect
+        selectedCitiesForGame = selectedCitiesForGame.filter(c => c !== name);
+        card.classList.remove('selected');
+    } else {
+        // Select (Max 10)
+        if (selectedCitiesForGame.length >= 10) {
+            alert("You can only select 10 cities!");
+            return;
+        }
+        selectedCitiesForGame.push(name);
+        card.classList.add('selected');
+    }
+    
+    // Update Counter
+    const counter = document.getElementById('selection-counter');
+    counter.innerText = `Selected: ${selectedCitiesForGame.length} / 10`;
+    
+    // Enable Start Button if exactly 10
+    const btn = document.getElementById('start-game-btn');
+    btn.disabled = selectedCitiesForGame.length !== 10;
+    
+    if (selectedCitiesForGame.length === 10) {
+        btn.style.background = '#10b981';
+        btn.innerText = "Start Mayoral Term 🚀";
+    } else {
+        btn.style.background = '#475569';
+        btn.innerText = "Select 10 Cities";
+    }
+}
+
+function startGameWithSelection() {
+    if (selectedCitiesForGame.length !== 10) return;
+    
+    document.getElementById('selection-modal').style.display = 'none';
+    
+    cityState.areas = {};
+    selectedCitiesForGame.forEach(name => {
+        cityState.areas[name] = { ...MASTER_CITIES[name] }; 
+    });
+
+    initMap(); 
+    initInfrastructureLayer();
+    renderCityInfrastructure();
+    updateDashboard();
+    
+    const budgetSpan = document.getElementById('budget');
+    if(budgetSpan) budgetSpan.innerText = `₹${cityState.budget} Cr`;
+    const happSpan = document.getElementById('happiness');
+    if(happSpan) happSpan.innerText = `${cityState.happiness}%`;
+
+    saveGame(); // Save immediately so they don't have to re-pick on refresh
+    
+    setTimeout(() => { 
+        map.invalidateSize(); 
+        renderAreaCards(); 
+    }, 250);
+}
+
+// =============================================================
+// GAMEPLAY LOGIC
 // =============================================================
 function handleAreaCardClick(name) {
     const area = cityState.areas[name];
+    if (!area) return;
     
     if (map) {
         const loc = locations.find(l => l.name === name);
         if (loc) map.flyTo(loc.coords, 15, { duration: 1.5 });
     }
 
-    if (typeof selectArea === 'function') {
-        selectArea(name, true); 
-    }
+    if (typeof selectArea === 'function') { selectArea(name, true); }
     renderAreaCards();
     
     const panel = document.getElementById('problem-panel');
@@ -74,12 +160,9 @@ function handleAreaCardClick(name) {
         panel.innerHTML = `<strong>${name}</strong><br>Flood Severity: ${area.flood}/100<br>Traffic: ${area.traffic}/100`;
     }
 
-    if (!area.solved) {
-        showCityToast(name, area);
-    }
+    if (!area.solved) { showCityToast(name, area); }
 }
 
-// NEW: Function to display the City Report
 function showCityToast(name, area) {
     const toast = document.getElementById('city-toast');
     if (!toast) return;
@@ -97,38 +180,10 @@ function showCityToast(name, area) {
         </div>
     `;
     
+    toast.style.borderLeftColor = '#ef4444';
     toast.classList.add('show');
     clearTimeout(toastTimeout);
-    toastTimeout = setTimeout(() => {
-        toast.classList.remove('show');
-    }, 4000);
-}
-
-// NEW: Function for the Welcome Message on load
-function showWelcomeToast() {
-    const toast = document.getElementById('city-toast');
-    if (!toast) return;
-    
-    toast.innerHTML = `
-        <div style="font-size: 28px;">👋</div>
-        <div>
-            <strong style="color: #f59e0b; font-size: 16px; display: block; margin-bottom: 4px;">Welcome, Mayor!</strong>
-            <span style="color: #cbd5e1; font-size: 13px; line-height: 1.4;">
-                Select <strong>any 10 cities</strong> of your choice and propose solutions within your <strong>₹200 Cr budget</strong>!
-            </span>
-        </div>
-    `;
-    
-    // Change border color to gold for the welcome message
-    toast.style.borderLeftColor = '#f59e0b';
-    toast.classList.add('show');
-    
-    clearTimeout(toastTimeout);
-    toastTimeout = setTimeout(() => {
-        toast.classList.remove('show');
-        // Reset border color back to red for future city reports
-        setTimeout(() => { toast.style.borderLeftColor = '#ef4444'; }, 300); 
-    }, 6000); // Shows for 6 seconds
+    toastTimeout = setTimeout(() => { toast.classList.remove('show'); }, 4000);
 }
 
 function renderAreaCards() {
@@ -166,17 +221,13 @@ function renderAreaCards() {
                 <div class="area-stat-row">
                     <span class="stat-emoji">🌊</span>
                     <span class="stat-name">Flood</span>
-                    <div class="area-stat-bar flood">
-                        <div style="width:${displayFlood}%;"></div>
-                    </div>
+                    <div class="area-stat-bar flood"><div style="width:${displayFlood}%;"></div></div>
                     <span class="area-stat-val">${displayFlood}</span>
                 </div>
                 <div class="area-stat-row">
                     <span class="stat-emoji">🚗</span>
                     <span class="stat-name">Traffic</span>
-                    <div class="area-stat-bar traffic">
-                        <div style="width:${displayTraffic}%;"></div>
-                    </div>
+                    <div class="area-stat-bar traffic"><div style="width:${displayTraffic}%;"></div></div>
                     <span class="area-stat-val">${displayTraffic}</span>
                 </div>
             </div>
@@ -184,17 +235,12 @@ function renderAreaCards() {
     }).join('');
 }
 
-// =============================================================
-// QUICK-ACTION CHIPS
-// =============================================================
 function appendChip(text) {
     const input = document.getElementById('proposal-input');
     if (!input) return;
-
     const existing = input.value.trim();
-    if (!existing) {
-        input.value = text;
-    } else {
+    if (!existing) { input.value = text; } 
+    else {
         if (existing.toLowerCase().includes(text.toLowerCase())) return;
         input.value = existing + ', ' + text;
     }
@@ -202,12 +248,9 @@ function appendChip(text) {
     input.setSelectionRange(input.value.length, input.value.length);
 }
 
-// =============================================================
-// CORE LOGIC
-// =============================================================
 function selectArea(name, fromUI = false) {
     const area = cityState.areas[name];
-    if (area.solved) return; 
+    if (!area || area.solved) return; 
 
     cityState.selectedArea = name;
     
@@ -230,13 +273,8 @@ function selectArea(name, fromUI = false) {
 function evaluateProposal() {
     const text = document.getElementById('proposal-input').value.toLowerCase();
     if (!cityState.selectedArea) { 
-        const unsolved = Object.keys(cityState.areas).find(k => !cityState.areas[k].solved);
-        if(unsolved) {
-            handleAreaCardClick(unsolved);
-        } else {
-            alert("All areas are already solved!"); 
-            return;
-        }
+        alert("Please select a city first!"); 
+        return;
     }
     
     const area = cityState.areas[cityState.selectedArea];
@@ -292,7 +330,6 @@ function approveProposal() {
     
     const stamp = document.getElementById('draft-stamp');
     stamp.classList.add('slam');
-    
     const approveBtn = document.getElementById('approve-btn');
     approveBtn.disabled = true;
     approveBtn.innerText = "Processing...";
@@ -324,9 +361,6 @@ function approveProposal() {
     }, 800); 
 }
 
-// =============================================================
-// DASHBOARD UPDATERS
-// =============================================================
 function updateDashboard() {
     renderDonut();
     renderApproval();
@@ -360,8 +394,7 @@ function updateDashboard() {
             mapMarkers[name].setIcon(L.divIcon({
                 className: 'custom-div-icon',
                 html: `<div class='map-marker solved'>📍 ${name}<div class='map-stamp-text'>APPROVED</div></div>`,
-                iconSize: [120, 50],
-                iconAnchor: [60, 25]
+                iconSize: [120, 50], iconAnchor: [60, 25]
             }));
         }
     }
@@ -372,7 +405,6 @@ function renderDonut() {
     const total = 200; 
     const spent = Math.max(0, total - remaining);
     const circumference = 2 * Math.PI * 50;
-
     const remainingLen = (remaining / total) * circumference;
     const spentLen = (spent / total) * circumference;
 
@@ -435,9 +467,6 @@ function renderApproval() {
     }
 }
 
-// =============================================================
-// MAP TRANSFORMATIONS (DIGITAL TWIN)
-// =============================================================
 function initInfrastructureLayer() {
     if (typeof map !== 'undefined' && !infrastructureLayer) {
         infrastructureLayer = L.layerGroup().addTo(map);
@@ -450,100 +479,99 @@ function renderCityInfrastructure() {
 
     infrastructureLayer.clearLayers(); 
 
-    if (cityState.areas['Vadapalani'].solved) {
+    if (cityState.areas['Vadapalani'] && cityState.areas['Vadapalani'].solved) {
         const metroCoords = [ [13.0503, 80.2121], [13.0450, 80.2200], [13.0400, 80.2350], [13.0350, 80.2500] ];
         L.polyline(metroCoords, { color: '#3b82f6', weight: 6, opacity: 0.9, dashArray: '10, 10', lineCap: 'round', className: 'metro-line-anim' }).addTo(infrastructureLayer).bindTooltip("🚇 New Metro Extension", { permanent: true, direction: "right", className: 'map-tooltip' });
     }
-    if (cityState.areas['Velachery'].solved) {
+    if (cityState.areas['Velachery'] && cityState.areas['Velachery'].solved) {
         const parkCoords = [ [12.9800, 80.2150], [12.9780, 80.2210], [12.9720, 80.2220], [12.9710, 80.2160], [12.9750, 80.2130] ];
         L.polygon(parkCoords, { color: '#10b981', weight: 2, fillColor: '#10b981', fillOpacity: 0.4, className: 'park-fade-in' }).addTo(infrastructureLayer).bindTooltip("🌳 Flood Absorption Park", { permanent: true, direction: "center", className: 'map-tooltip' });
     }
-    if (cityState.areas['Porur'].solved) {
+    if (cityState.areas['Porur'] && cityState.areas['Porur'].solved) {
         const ringRoadCoords = [ [13.0358, 80.1568], [13.0450, 80.1400], [13.0600, 80.1450], [13.0700, 80.1600], [13.0600, 80.1800], [13.0400, 80.1800], [13.0358, 80.1568] ];
         L.polyline(ringRoadCoords, { color: '#f59e0b', weight: 8, opacity: 0.8, lineCap: 'round', lineJoin: 'round' }).addTo(infrastructureLayer).bindTooltip("🛣️ New Porur Bypass", { permanent: true, direction: "center", className: 'map-tooltip' });
     }
-    if (cityState.areas['ECR'].solved) {
+    if (cityState.areas['ECR'] && cityState.areas['ECR'].solved) {
         const ecrCoords = [ [12.9850, 80.2600], [12.9700, 80.2650], [12.9500, 80.2700] ];
         L.polyline(ecrCoords, { color: '#0ea5e9', weight: 5, opacity: 0.8, dashArray: '5, 10' }).addTo(infrastructureLayer).bindTooltip("🏖️ Coastal Walkway", { permanent: true, direction: "right", className: 'map-tooltip' });
     }
-    if (cityState.areas['T. Nagar'].solved) {
+    if (cityState.areas['T. Nagar'] && cityState.areas['T. Nagar'].solved) {
         const flyoverCoords = [ [13.0350, 80.2300], [13.0400, 80.2350], [13.0450, 80.2400] ];
         L.polyline(flyoverCoords, { color: '#a855f7', weight: 7, opacity: 0.9 }).addTo(infrastructureLayer).bindTooltip("🌉 T.Nagar Flyover", { permanent: true, direction: "top", className: 'map-tooltip' });
     }
-    if (cityState.areas['Anna Salai'].solved) {
+    if (cityState.areas['Anna Salai'] && cityState.areas['Anna Salai'].solved) {
         const annaSalaiCoords = [ [13.0600, 80.2700], [13.0700, 80.2750], [13.0800, 80.2800] ];
         L.polyline(annaSalaiCoords, { color: '#10b981', weight: 9, opacity: 0.8 }).addTo(infrastructureLayer).bindTooltip("🛣️ Anna Salai Corridor", { permanent: true, direction: "top", className: 'map-tooltip' });
     }
-    if (cityState.areas['Ramapuram'].solved) {
+    if (cityState.areas['Ramapuram'] && cityState.areas['Ramapuram'].solved) {
         const subwayCoords = [ [13.0300, 80.1800], [13.0330, 80.1830] ];
         L.polyline(subwayCoords, { color: '#64748b', weight: 8, opacity: 0.9 }).addTo(infrastructureLayer).bindTooltip("🚇 Ramapuram Subway", { permanent: true, direction: "bottom", className: 'map-tooltip' });
     }
-    if (cityState.areas['Koyambedu'].solved) {
+    if (cityState.areas['Koyambedu'] && cityState.areas['Koyambedu'].solved) {
         const koyambeduCoords = [ [13.0700, 80.1950], [13.0750, 80.2000] ];
         L.polyline(koyambeduCoords, { color: '#a855f7', weight: 7, opacity: 0.9 }).addTo(infrastructureLayer).bindTooltip("🌉 Koyambedu Flyover", { permanent: true, direction: "top", className: 'map-tooltip' });
     }
-    if (cityState.areas['Tidel Park'].solved) {
+    if (cityState.areas['Tidel Park'] && cityState.areas['Tidel Park'].solved) {
         const tidelCoords = [ [12.9900, 80.2450], [12.9880, 80.2480], [12.9920, 80.2500] ];
         L.polygon(tidelCoords, { color: '#06b6d4', weight: 2, fillColor: '#06b6d4', fillOpacity: 0.5 }).addTo(infrastructureLayer).bindTooltip("💻 IT Park Corridor", { permanent: true, direction: "center", className: 'map-tooltip' });
     }
-    if (cityState.areas['Tambaram'].solved) {
+    if (cityState.areas['Tambaram'] && cityState.areas['Tambaram'].solved) {
         const tambaramCoords = [ [12.9200, 80.1200], [12.9250, 80.1250], [12.9300, 80.1300] ];
         L.polyline(tambaramCoords, { color: '#3b82f6', weight: 6, opacity: 0.9, dashArray: '10, 10' }).addTo(infrastructureLayer).bindTooltip("🚆 Tambaram Rail Upgrade", { permanent: true, direction: "right", className: 'map-tooltip' });
     }
-    if (cityState.areas['Adyar'].solved) {
+    if (cityState.areas['Adyar'] && cityState.areas['Adyar'].solved) {
         const adyarCoords = [ [13.0067, 80.2570], [13.0100, 80.2600] ];
         L.polyline(adyarCoords, { color: '#3b82f6', weight: 6, opacity: 0.9 }).addTo(infrastructureLayer).bindTooltip("🌉 Adyar Bridge", { permanent: true, direction: "right", className: 'map-tooltip' });
     }
-    if (cityState.areas['Guindy'].solved) {
+    if (cityState.areas['Guindy'] && cityState.areas['Guindy'].solved) {
         const guindyCoords = [ [13.0067, 80.2206], [13.0100, 80.2250] ];
         L.polyline(guindyCoords, { color: '#a855f7', weight: 7, opacity: 0.9 }).addTo(infrastructureLayer).bindTooltip("🌉 Guindy Flyover", { permanent: true, direction: "top", className: 'map-tooltip' });
     }
-    if (cityState.areas['Chromepet'].solved) {
+    if (cityState.areas['Chromepet'] && cityState.areas['Chromepet'].solved) {
         const chromeCoords = [ [12.9516, 80.1462], [12.9550, 80.1500] ];
         L.polyline(chromeCoords, { color: '#f59e0b', weight: 8, opacity: 0.8 }).addTo(infrastructureLayer).bindTooltip("🚉 Chromepet Rail Overpass", { permanent: true, direction: "bottom", className: 'map-tooltip' });
     }
-    if (cityState.areas['Nungambakkam'].solved) {
+    if (cityState.areas['Nungambakkam'] && cityState.areas['Nungambakkam'].solved) {
         const nungamCoords = [ [13.0569, 80.2425], [13.0600, 80.2450] ];
         L.polygon(nungamCoords, { color: '#10b981', weight: 2, fillColor: '#10b981', fillOpacity: 0.4 }).addTo(infrastructureLayer).bindTooltip("🏙️ Nungambakkam Hub", { permanent: true, direction: "center", className: 'map-tooltip' });
     }
-    if (cityState.areas['Besant Nagar'].solved) {
+    if (cityState.areas['Besant Nagar'] && cityState.areas['Besant Nagar'].solved) {
         const besantCoords = [ [13.0003, 80.2668], [13.0020, 80.2700] ];
         L.polygon(besantCoords, { color: '#0ea5e9', weight: 2, fillColor: '#0ea5e9', fillOpacity: 0.5 }).addTo(infrastructureLayer).bindTooltip("🏖️ Besant Nagar Beach Park", { permanent: true, direction: "center", className: 'map-tooltip' });
     }
 }
 
 // =============================================================
-// INITIALIZATION & HELPERS
+// INITIALIZATION
 // =============================================================
 window.onload = function() {
     const savedState = localStorage.getItem('twinCityState');
+    
     if (savedState) {
         const parsed = JSON.parse(savedState);
-        if (parsed.version === GAME_VERSION) {
+        if (parsed.version === GAME_VERSION && parsed.areas && Object.keys(parsed.areas).length === 10) {
             Object.assign(cityState, parsed);
+            
+            initMap(); 
+            initInfrastructureLayer();
+            renderCityInfrastructure();
+            updateDashboard();
+            
+            const budgetSpan = document.getElementById('budget');
+            if(budgetSpan) budgetSpan.innerText = `₹${cityState.budget} Cr`;
+            const happSpan = document.getElementById('happiness');
+            if(happSpan) happSpan.innerText = `${cityState.happiness}%`;
+            
+            checkWinCondition(); 
+            setTimeout(() => { map.invalidateSize(); renderAreaCards(); }, 250);
+            return; 
         } else {
             localStorage.removeItem('twinCityState');
         }
     }
-    
-    initMap(); 
-    initInfrastructureLayer();
-    renderCityInfrastructure();
-    updateDashboard();
-    
-    const budgetSpan = document.getElementById('budget');
-    if(budgetSpan) budgetSpan.innerText = `₹${cityState.budget} Cr`;
-    const happSpan = document.getElementById('happiness');
-    if(happSpan) happSpan.innerText = `${cityState.happiness}%`;
 
-    // Show the Welcome Toast on load instead of auto-selecting a city
-    setTimeout(showWelcomeToast, 500);
-
-    checkWinCondition(); 
-    setTimeout(() => { 
-        map.invalidateSize(); 
-        renderAreaCards(); 
-    }, 250);
+    renderCitySelection();
+    document.getElementById('selection-modal').style.display = 'flex';
 };
 
 function saveGame() { 
@@ -554,9 +582,7 @@ function saveGame() {
 function checkWinCondition() { 
     const solvedCount = Object.values(cityState.areas).filter(a => a.solved).length;
     if (solvedCount >= 10) { 
-        setTimeout(() => { 
-            document.getElementById('victory-screen').style.display = 'flex'; 
-        }, 1000); 
+        setTimeout(() => { document.getElementById('victory-screen').style.display = 'flex'; }, 1000); 
     } 
 }
 
@@ -576,12 +602,11 @@ function initMap() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
     
     locations.forEach(loc => {
-        const customIcon = L.divIcon({ className: 'custom-div-icon', html: `<div class='map-marker'>📍 ${loc.name}</div>`, iconSize: [100, 30], iconAnchor: [50, 15] });
-        const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
-        mapMarkers[loc.name] = marker;
-        
-        marker.on('click', function() { 
-            handleAreaCardClick(loc.name);
-        });
+        if (cityState.areas[loc.name]) {
+            const customIcon = L.divIcon({ className: 'custom-div-icon', html: `<div class='map-marker'>📍 ${loc.name}</div>`, iconSize: [100, 30], iconAnchor: [50, 15] });
+            const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
+            mapMarkers[loc.name] = marker;
+            marker.on('click', function() { handleAreaCardClick(loc.name); });
+        }
     });
 }
