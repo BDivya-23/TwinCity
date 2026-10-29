@@ -25,6 +25,7 @@ let currentProposal = null;
 let map;
 let mapMarkers = {}; 
 let infrastructureLayer; // Layer group for Map Transformations
+let ambientCars = []; // For Ambient Traffic
 
 // =============================================================
 // PER-AREA MINI-CARDS
@@ -366,6 +367,77 @@ function renderCityInfrastructure() {
 }
 
 // =============================================================
+// STREET VIEW EXPLORATION (STREETQUEST)
+// =============================================================
+function startExploration() {
+    const container = document.getElementById('street-view-container');
+    const bg = document.getElementById('street-view-bg');
+    container.style.display = 'block';
+    
+    // Reset transform
+    bg.style.transform = 'translate(0px, 0px) scale(1.1)';
+
+    // Add mouse move listener to pan the background
+    container.onmousemove = (e) => {
+        const x = (e.clientX / window.innerWidth) * 2 - 1; 
+        const y = (e.clientY / window.innerHeight) * 2 - 1;
+        
+        // Move background to simulate 3D looking
+        bg.style.transform = `translate(${x * -60}px, ${y * -30}px) scale(1.1)`;
+    };
+}
+
+function stopExploration() {
+    document.getElementById('street-view-container').style.display = 'none';
+    document.getElementById('street-view-container').onmousemove = null;
+}
+
+function discoverProblem(areaName) {
+    stopExploration();
+
+    const loc = locations.find(l => l.name === areaName);
+    if(loc) {
+        // Zoom map to location
+        map.flyTo(loc.coords, 15, { duration: 2 });
+    }
+
+    // Trigger selection
+    handleAreaCardClick(areaName);
+
+    // Visual feedback
+    const panel = document.getElementById('problem-panel');
+    if(panel) {
+        panel.style.boxShadow = "0 0 20px rgba(239, 68, 68, 0.8)";
+        setTimeout(() => { panel.style.boxShadow = "none"; }, 3000);
+    }
+    
+    // Auto populate input
+    document.getElementById('proposal-input').value = "Investigate and fix ";
+    document.getElementById('proposal-input').focus();
+}
+
+// =============================================================
+// AMBIENT TRAFFIC
+// =============================================================
+function spawnTraffic() {
+    const emojis = ['🚙', '🚕', '🚌', '🚚', '🛵'];
+    for(let i=0; i<10; i++) {
+        const lat = 13.0500 + (Math.random() - 0.5) * 0.08;
+        const lng = 80.2100 + (Math.random() - 0.5) * 0.08;
+        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+        const rotation = Math.random() * 360;
+        
+        const carIcon = L.divIcon({ 
+            className: 'custom-div-icon', 
+            html: `<div style="font-size: 22px; opacity: 0.85; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5)); transform: rotate(${rotation}deg);">${emoji}</div>`, 
+            iconSize: [22, 22], iconAnchor: [11, 11]
+        });
+        const marker = L.marker([lat, lng], { icon: carIcon, zIndexOffset: 100 }).addTo(map);
+        ambientCars.push(marker);
+    }
+}
+
+// =============================================================
 // INITIALIZATION & HELPERS
 // =============================================================
 window.onload = function() {
@@ -373,6 +445,7 @@ window.onload = function() {
     if (savedState) Object.assign(cityState, JSON.parse(savedState));
     
     initMap(); 
+    spawnTraffic(); // Add ambient cars
     initInfrastructureLayer();
     renderCityInfrastructure(); // Draw saved infrastructure on load
     
