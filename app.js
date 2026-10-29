@@ -1,5 +1,5 @@
 // === STATE ===
-const GAME_VERSION = "1.0.21"; // Forces cache clear
+const GAME_VERSION = "1.0.22"; // Forces cache clear
 
 const cityState = {
     budget: 200, happiness: 65, selectedArea: null,
@@ -51,7 +51,7 @@ let currentProposal = null;
 let map;
 let mapMarkers = {}; 
 let infrastructureLayer; 
-let toastTimeout; // For the new auto-hide toast
+let toastTimeout; 
 
 // =============================================================
 // PER-AREA MINI-CARDS & MAP ZOOM
@@ -74,13 +74,11 @@ function handleAreaCardClick(name) {
         panel.innerHTML = `<strong>${name}</strong><br>Flood Severity: ${area.flood}/100<br>Traffic: ${area.traffic}/100`;
     }
 
-    // Trigger the auto-hide Toast
     if (!area.solved) {
         showCityToast(name, area);
     }
 }
 
-// NEW: Floating Toast Function
 function showCityToast(name, area) {
     const toast = document.getElementById('city-toast');
     if (!toast) return;
@@ -98,10 +96,7 @@ function showCityToast(name, area) {
         </div>
     `;
     
-    // Show the toast
     toast.classList.add('show');
-    
-    // Clear any existing timer and set a new one (4 seconds)
     clearTimeout(toastTimeout);
     toastTimeout = setTimeout(() => {
         toast.classList.remove('show');
@@ -487,40 +482,6 @@ function renderCityInfrastructure() {
         const besantCoords = [ [13.0003, 80.2668], [13.0020, 80.2700] ];
         L.polygon(besantCoords, { color: '#0ea5e9', weight: 2, fillColor: '#0ea5e9', fillOpacity: 0.5 }).addTo(infrastructureLayer).bindTooltip("🏖️ Besant Nagar Beach Park", { permanent: true, direction: "center", className: 'map-tooltip' });
     }
-}
-
-// =============================================================
-// STREET VIEW EXPLORATION (STREETQUEST)
-// =============================================================
-function startExploration() {
-    const container = document.getElementById('street-view-container');
-    const bg = document.getElementById('street-view-bg');
-    container.style.display = 'block';
-    bg.style.transform = 'translate(0px, 0px) scale(1.1)';
-
-    container.onmousemove = (e) => {
-        const x = (e.clientX / window.innerWidth) * 2 - 1;
-        const y = (e.clientY / window.innerHeight) * 2 - 1;
-        bg.style.transform = `translate(${x * -60}px, ${y * -30}px) scale(1.1)`;
-    };
-}
-
-function stopExploration() {
-    document.getElementById('street-view-container').style.display = 'none';
-    document.getElementById('street-view-container').onmousemove = null;
-}
-
-function discoverProblem(areaName) {
-    stopExploration();
-    handleAreaCardClick(areaName);
-    
-    const panel = document.getElementById('problem-panel');
-    if(panel) {
-        panel.style.boxShadow = "0 0 20px rgba(239, 68, 68, 0.8)";
-        setTimeout(() => { panel.style.boxShadow = "none"; }, 3000);
-    }
-    document.getElementById('proposal-input').value = "Investigate and fix ";
-    document.getElementById('proposal-input').focus();
 }
 
 // =============================================================
