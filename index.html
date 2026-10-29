@@ -41,7 +41,7 @@
                             style="transition: stroke-dasharray 0.6s ease;"/>
                 </svg>
                 <div id="donut-center">
-                    <div id="donut-amount">₹400</div>
+                    <div id="donut-amount">₹200</div>
                     <div id="donut-sub">Cr left</div>
                 </div>
             </div>
@@ -49,14 +49,14 @@
                 <div class="legend-row">
                     <span class="legend-dot" style="background:#10b981;"></span>
                     <span>Remaining</span>
-                    <strong id="legend-remaining">₹400 Cr</strong>
+                    <strong id="legend-remaining">₹200 Cr</strong>
                 </div>
                 <div class="legend-row">
                     <span class="legend-dot" style="background:#ef4444;"></span>
                     <span>Spent</span>
                     <strong id="legend-spent">₹0 Cr</strong>
                 </div>
-                <span id="budget" style="display:none;">₹400 Cr</span>
+                <span id="budget" style="display:none;">₹200 Cr</span>
                 <div id="budget-bar" style="display:none;"></div>
             </div>
         </div>
@@ -103,7 +103,10 @@
         <button class="action" style="background: #f59e0b; color: #000; font-weight: 800; margin-bottom: 15px;" onclick="startExploration()">🕵️ Explore Chennai Streets</button>
 
         <!-- Per-Area Mini-Cards -->
-        <h2>City Zones</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 25px 0 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
+            <h2 style="margin: 0; border: none; padding: 0;">City Zones</h2>
+            <span id="goal-counter" style="font-size: 12px; font-weight: bold; color: #f59e0b; background: rgba(245, 158, 11, 0.2); padding: 4px 8px; border-radius: 12px; border: 1px solid #f59e0b;">Saved: 0 / 10</span>
+        </div>
         <div id="area-cards-container"></div>
         
         <!-- Hidden for backward compatibility -->
@@ -183,7 +186,7 @@
     <div id="victory-screen" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(10, 22, 40, 0.95); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(10px);">
         <div style="background: #1e293b; padding: 40px; border-radius: 15px; text-align: center; border: 2px solid #d4af37; box-shadow: 0 0 50px rgba(212, 175, 55, 0.3); max-width: 500px;">
             <h1 style="color: #d4af37; font-size: 36px; margin-bottom: 10px;">🏆 MISSION ACCOMPLISHED!</h1>
-            <p style="font-size: 16px; color: #cbd5e1; line-height: 1.6; margin-bottom: 25px;">You have successfully resolved all major crises in Chennai!</p>
+            <p style="font-size: 16px; color: #cbd5e1; line-height: 1.6; margin-bottom: 25px;">You have strategically saved 10 cities in Chennai within your budget! The citizens thank you, Mayor.</p>
             <button class="action" style="background: #10b981; font-size: 16px;" onclick="resetGame()">Play Again</button>
         </div>
     </div>
