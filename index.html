@@ -118,7 +118,7 @@
 
         <button class="action" onclick="evaluateProposal()">🔍 Evaluate Proposal</button>
         
-        <!-- ADVISOR CHAT & DRAFT SYSTEM -->
+        <!-- ADVISOR CHAT -->
         <div id="advisor-container" style="display:none; margin-top: 15px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
             <div style="display: flex; gap: 15px; align-items: flex-start;">
                 <img id="advisor-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Felix&backgroundColor=3b82f6" style="width: 55px; height: 55px; border-radius: 50%; border: 2px solid #3b82f6; background: #0f172a; flex-shrink: 0;">
@@ -126,31 +126,34 @@
             </div>
         </div>
 
-        <!-- THE OFFICIAL DRAFT DOCUMENT -->
-        <div id="draft-document" style="display: none;">
-            <div class="draft-paper">
-                <div class="draft-header">
-                    <span>🏛️ CITY OF CHENNAI</span>
-                    <span>OFFICIAL RESOLUTION</span>
-                </div>
-                <div class="draft-body">
-                    <p><strong>TO:</strong> Mayor's Office</p>
-                    <p><strong>SUBJECT:</strong> <span id="draft-subject"></span></p>
-                    <p><strong>COST:</strong> <span id="draft-cost"></span></p>
-                    <p><strong>IMPACT:</strong> <span id="draft-impact"></span></p>
-                </div>
-                <div class="draft-footer">
-                    <span>Status: PENDING SIGNATURE</span>
-                    <div class="stamp" id="draft-stamp">APPROVED</div>
-                </div>
-            </div>
-        </div>
-
         <button class="action" id="approve-btn" onclick="approveProposal()" disabled>✍️ Sign & Approve Resolution</button>
     </div>
 
     <!-- ========================================== -->
-    <!-- STREET HERO OVERLAY MODE -->
+    <!-- OFFICIAL RESOLUTION MAP POPUP              -->
+    <!-- ========================================== -->
+    <div id="resolution-overlay">
+        <div class="draft-paper">
+            <div class="draft-header">
+                <span>🏛️ CITY OF CHENNAI</span>
+                <span>OFFICIAL RESOLUTION</span>
+            </div>
+            <div class="draft-body">
+                <p><strong>TO:</strong> Mayor's Office</p>
+                <p><strong>SUBJECT:</strong> <span id="draft-subject">Drainage system</span></p>
+                <p><strong>COST:</strong> <span id="draft-cost">₹20 Crore</span></p>
+                <p><strong>IMPACT:</strong> <span id="draft-impact">Reduce Risk by 30 points.</span></p>
+            </div>
+            <div class="draft-footer">
+                <span>Status: PENDING SIGNATURE</span>
+                <div class="stamp" id="draft-stamp">APPROVED</div>
+            </div>
+            <button class="action" style="margin-top: 25px; background: #3b82f6; color: white; font-weight: bold; padding: 12px; border-radius: 8px; border: none; cursor: pointer;" onclick="closeResolution()">Close Document</button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- STREET HERO OVERLAY MODE                   -->
     <!-- ========================================== -->
     <div id="street-hero-overlay">
         <!-- Breaking News Banner -->
@@ -180,7 +183,7 @@
         <button class="action" style="position: absolute; top: 80px; right: 30px; width: auto; background: #ef4444; z-index: 10000; padding: 10px 20px; font-size: 16px;" onclick="stopStreetHero()">🛑 Exit Hero Mode</button>
     </div>
 
-    <!-- MISSION MODAL -->
+    <!-- MISSION MODAL (STREET HERO) -->
     <div id="mission-modal" class="game-modal">
         <div class="modal-content">
             <h2 id="mission-title" style="color: #ef4444;">🔍 INVESTIGATE PROBLEM</h2>
