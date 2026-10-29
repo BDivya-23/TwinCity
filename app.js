@@ -315,3 +315,86 @@ function spawnTraffic() {
         ambientCars.push(marker);
     }
 }
+/* =============================================================
+   RENDER BUDGET DONUT
+   ============================================================= */
+function renderDonut() {
+    const remaining = cityState.budget;
+    const total = 100;
+    const spent = Math.max(0, total - remaining);
+    const circumference = 2 * Math.PI * 50; // r = 50 → ~314.16
+
+    const remainingLen = (remaining / total) * circumference;
+    const spentLen = (spent / total) * circumference;
+
+    const remainingCircle = document.getElementById('donut-remaining');
+    const spentCircle = document.getElementById('donut-spent');
+
+    if (remainingCircle) {
+        remainingCircle.setAttribute('stroke-dasharray', `${remainingLen} ${circumference - remainingLen}`);
+        remainingCircle.setAttribute('stroke-dashoffset', `${-spentLen}`);
+    }
+    if (spentCircle) {
+        spentCircle.setAttribute('stroke-dasharray', `${spentLen} ${circumference - spentLen}`);
+    }
+
+    // Center text
+    const amountEl = document.getElementById('donut-amount');
+    if (amountEl) {
+        amountEl.textContent = '₹' + remaining;
+        amountEl.style.color = remaining < 30 ? '#ef4444' : '#10b981';
+    }
+
+    // Legend
+    const legendRem = document.getElementById('legend-remaining');
+    const legendSpent = document.getElementById('legend-spent');
+    if (legendRem) legendRem.textContent = '₹' + remaining + ' Cr';
+    if (legendSpent) legendSpent.textContent = '₹' + spent + ' Cr';
+}
+
+/* =============================================================
+   RENDER APPROVAL METER
+   ============================================================= */
+function renderApproval() {
+    const h = cityState.happiness;
+
+    // Determine Emoji and Color based on happiness
+    let emoji = '😐';
+    let color = '#facc15';
+    if (h < 40)      { emoji = '😡'; color = '#ef4444'; }
+    else if (h < 60) { emoji = '😟'; color = '#f97316'; }
+    else if (h < 75) { emoji = '😐'; color = '#facc15'; }
+    else if (h < 90) { emoji = '🙂'; color = '#3b82f6'; }
+    else             { emoji = '😄'; color = '#10b981'; }
+
+    const emojiEl = document.getElementById('approval-emoji');
+    const happinessEl = document.getElementById('happiness');
+    const fill = document.getElementById('happiness-bar');
+    const stars = document.getElementById('star-rating');
+
+    // Update Emoji (with bounce animation if it changed)
+    if (emojiEl && emojiEl.textContent !== emoji) {
+        emojiEl.textContent = emoji;
+        emojiEl.classList.remove('bump');
+        void emojiEl.offsetWidth; // Trigger reflow to restart CSS animation
+        emojiEl.classList.add('bump');
+    }
+
+    // Update % Text and Color
+    if (happinessEl) {
+        happinessEl.textContent = h + '%';
+        happinessEl.style.color = color;
+    }
+
+    // Update Bar Width and Color
+    if (fill) {
+        fill.style.width = h + '%';
+        fill.style.background = color;
+    }
+
+    // Update Stars (1 star per 20%)
+    if (stars) {
+        const filled = Math.round(h / 20);
+        stars.textContent = '★'.repeat(filled) + '☆'.repeat(5 - filled);
+    }
+}
