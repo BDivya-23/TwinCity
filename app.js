@@ -15,20 +15,20 @@ const locations = [
 ];
 
 const advisorRules = [
-    { keywords: ['drain', 'water', 'flood'], cost: 20, impact: 30, text: "Drainage system: reduces flooding significantly. Estimated cost: ₹20 crore. May cause 3 months of local disruption." },
-    { keywords: ['metro', 'train', 'transport'], cost: 40, impact: 25, text: "Metro extension: improves connectivity and traffic. Estimated cost: ₹40 crore. High construction impact." },
-    { keywords: ['park', 'green', 'tree'], cost: 10, impact: 10, text: "Green spaces: improves citizen happiness. Estimated cost: ₹10 crore. Minor flood benefit." },
-    { keywords: ['road', 'pothole'], cost: 15, impact: 15, text: "Road repairs: improves accessibility. Estimated cost: ₹15 crore." }
+    { keywords: ['drain', 'water', 'flood'], cost: 20, impact: 30, text: "Drainage system" },
+    { keywords: ['metro', 'train', 'transport'], cost: 40, impact: 25, text: "Metro extension" },
+    { keywords: ['park', 'green', 'tree'], cost: 10, impact: 10, text: "Green spaces" },
+    { keywords: ['road', 'pothole'], cost: 15, impact: 15, text: "Road repairs" }
 ];
 
 let currentProposal = null;
 let map;
 let mapMarkers = {}; 
 let infrastructureLayer; 
-let ambientCars = []; 
+let ambientCars = [];
 
 // =============================================================
-// PER-AREA MINI-CARDS
+// UI UPDATERS
 // =============================================================
 function renderAreaCards() {
     const container = document.getElementById('area-cards-container');
@@ -39,7 +39,6 @@ function renderAreaCards() {
     container.innerHTML = names.map(name => {
         const a = cityState.areas[name];
         const isSelected = cityState.selectedArea === name;
-
         const displayFlood = a.solved ? 0 : a.flood;
         const displayTraffic = a.solved ? 0 : a.traffic;
 
@@ -49,11 +48,8 @@ function renderAreaCards() {
         if (!a.solved && !isSelected) cls += ' pick-hint';
 
         let tag = '';
-        if (a.solved) {
-            tag = `<span class="area-solved-tag">APPROVED</span>`;
-        } else if (isSelected) {
-            tag = `<span class="area-solved-tag" style="color:#3b82f6; border-color:#3b82f6;">Selected</span>`;
-        }
+        if (a.solved) tag = `<span class="area-solved-tag">APPROVED</span>`;
+        else if (isSelected) tag = `<span class="area-solved-tag" style="color:#3b82f6; border-color:#3b82f6;">Selected</span>`;
 
         return `
             <div class="${cls}" data-area="${name}" onclick="handleAreaCardClick('${name}')">
@@ -65,17 +61,13 @@ function renderAreaCards() {
                 <div class="area-stat-row">
                     <span class="stat-emoji">🌊</span>
                     <span class="stat-name">Flood</span>
-                    <div class="area-stat-bar flood">
-                        <div style="width:${displayFlood}%;"></div>
-                    </div>
+                    <div class="area-stat-bar flood"><div style="width:${displayFlood}%;"></div></div>
                     <span class="area-stat-val">${displayFlood}</span>
                 </div>
                 <div class="area-stat-row">
                     <span class="stat-emoji">🚗</span>
                     <span class="stat-name">Traffic</span>
-                    <div class="area-stat-bar traffic">
-                        <div style="width:${displayTraffic}%;"></div>
-                    </div>
+                    <div class="area-stat-bar traffic"><div style="width:${displayTraffic}%;"></div></div>
                     <span class="area-stat-val">${displayTraffic}</span>
                 </div>
             </div>
@@ -84,11 +76,8 @@ function renderAreaCards() {
 }
 
 function handleAreaCardClick(name) {
-    if (typeof selectArea === 'function') {
-        selectArea(name);
-    }
+    if (typeof selectArea === 'function') selectArea(name);
     renderAreaCards();
-    
     const panel = document.getElementById('problem-panel');
     if (panel) {
         const a = cityState.areas[name];
@@ -99,7 +88,6 @@ function handleAreaCardClick(name) {
 function appendChip(text) {
     const input = document.getElementById('proposal-input');
     if (!input) return;
-
     const existing = input.value.trim();
     if (!existing) {
         input.value = text;
@@ -119,13 +107,9 @@ function selectArea(name) {
     if (area.solved) return; 
 
     cityState.selectedArea = name;
-    
     const rainOverlay = document.getElementById('rain-overlay');
-    if (name === 'Velachery') {
-        rainOverlay.style.display = 'block';
-    } else {
-        rainOverlay.style.display = 'none';
-    }
+    if (name === 'Velachery') rainOverlay.style.display = 'block';
+    else rainOverlay.style.display = 'none';
     
     document.getElementById('proposal-input').value = '';
     document.getElementById('advisor-container').style.display = 'none';
@@ -137,12 +121,8 @@ function evaluateProposal() {
     const text = document.getElementById('proposal-input').value.toLowerCase();
     if (!cityState.selectedArea) { 
         const unsolved = Object.keys(cityState.areas).find(k => !cityState.areas[k].solved);
-        if(unsolved) {
-            handleAreaCardClick(unsolved);
-        } else {
-            alert("All areas are already solved!"); 
-            return;
-        }
+        if(unsolved) handleAreaCardClick(unsolved);
+        else { alert("All areas are already solved!"); return; }
     }
     
     const area = cityState.areas[cityState.selectedArea];
@@ -173,19 +153,32 @@ function evaluateProposal() {
 function approveProposal() {
     if (!currentProposal) return;
     const area = cityState.areas[cityState.selectedArea];
-    if (cityState.budget < currentProposal.cost) { document.getElementById('advisor-response').innerHTML = `<span style="color:#ef4444; font-weight:bold;">❌ INSUFFICIENT FUNDS!</span>`; return; }
+    if (cityState.budget < currentProposal.cost) { 
+        document.getElementById('advisor-response').innerHTML = `<span style="color:#ef4444; font-weight:bold;">❌ INSUFFICIENT FUNDS!</span>`; 
+        return; 
+    }
     
+    // Update State
     cityState.budget -= currentProposal.cost;
-    
     area.flood = 0; 
     area.traffic = 0;
     area.solved = true;
     
-    let happinessBonus = 5; if (currentProposal.keywords.includes('park')) happinessBonus = 15; if (currentProposal.keywords.includes('drain')) happinessBonus = 10; if (currentProposal.keywords.includes('metro')) happinessBonus = 5;  
+    let happinessBonus = 5; 
+    if (currentProposal.keywords.includes('park')) happinessBonus = 15; 
+    if (currentProposal.keywords.includes('drain')) happinessBonus = 10; 
+    if (currentProposal.keywords.includes('metro')) happinessBonus = 5;  
     cityState.happiness = Math.min(100, cityState.happiness + happinessBonus);
     
-    showFloatingText(`-₹${currentProposal.cost} Cr`, '#ef4444'); showFloatingText(`+${happinessBonus}% Happiness`, '#10b981');
-    
+    // Populate Modal
+    document.getElementById('draft-subject').innerText = currentProposal.text;
+    document.getElementById('draft-cost').innerText = `₹${currentProposal.cost} Crore`;
+    document.getElementById('draft-impact').innerText = `Reduce risk by ${currentProposal.impact} points.`;
+    document.getElementById('resolution-overlay').style.display = 'flex';
+
+    // UI Updates
+    showFloatingText(`-₹${currentProposal.cost} Cr`, '#ef4444'); 
+    showFloatingText(`+${happinessBonus}% Happiness`, '#10b981');
     updateDashboard(); 
     renderCityInfrastructure(); 
     saveGame();
@@ -195,6 +188,10 @@ function approveProposal() {
     document.getElementById('proposal-input').value = '';
 
     checkWinCondition(); 
+}
+
+function closeResolution() {
+    document.getElementById('resolution-overlay').style.display = 'none';
 }
 
 // =============================================================
@@ -220,8 +217,7 @@ function updateDashboard() {
             mapMarkers[name].setIcon(L.divIcon({
                 className: 'custom-div-icon',
                 html: `<div class='map-marker solved'>📍 ${name}<div class='map-stamp-text'>APPROVED</div></div>`,
-                iconSize: [120, 50],
-                iconAnchor: [60, 25]
+                iconSize: [120, 50], iconAnchor: [60, 25]
             }));
         }
     }
@@ -261,7 +257,6 @@ function renderDonut() {
 
 function renderApproval() {
     const h = cityState.happiness;
-
     let emoji = '😐'; let color = '#facc15';
     if (h < 40)      { emoji = '😡'; color = '#ef4444'; }
     else if (h < 60) { emoji = '😟'; color = '#f97316'; }
@@ -280,7 +275,6 @@ function renderApproval() {
         void emojiEl.offsetWidth;
         emojiEl.classList.add('bump');
     }
-
     if (happinessEl) { happinessEl.textContent = h + '%'; happinessEl.style.color = color; }
     if (fill) { fill.style.width = h + '%'; fill.style.background = color; }
     if (stars) {
@@ -301,19 +295,18 @@ function initInfrastructureLayer() {
 function renderCityInfrastructure() {
     if (!infrastructureLayer) initInfrastructureLayer();
     if (!infrastructureLayer) return;
-
     infrastructureLayer.clearLayers();
 
     if (cityState.areas['Vadapalani'].solved) {
         const metroCoords = [[13.0503, 80.2121], [13.0450, 80.2200], [13.0400, 80.2350], [13.0350, 80.2500]];
-        const metroLine = L.polyline(metroCoords, { color: '#3b82f6', weight: 6, opacity: 0.9, dashArray: '10, 10', lineCap: 'round', className: 'metro-line-anim' }).addTo(infrastructureLayer);
+        const metroLine = L.polyline(metroCoords, { color: '#3b82f6', weight: 6, opacity: 0.9, dashArray: '10, 10', lineCap: 'round' }).addTo(infrastructureLayer);
         L.circleMarker([13.0503, 80.2121], { radius: 6, color: '#fff', weight: 2, fillColor: '#3b82f6', fillOpacity: 1 }).addTo(infrastructureLayer);
         metroLine.bindTooltip("🚇 New Metro Extension", { permanent: true, direction: "right", className: 'map-tooltip' });
     }
 
     if (cityState.areas['Velachery'].solved) {
         const parkCoords = [[12.9800, 80.2150], [12.9780, 80.2210], [12.9720, 80.2220], [12.9710, 80.2160], [12.9750, 80.2130]];
-        L.polygon(parkCoords, { color: '#10b981', weight: 2, fillColor: '#10b981', fillOpacity: 0.4, className: 'park-fade-in' }).addTo(infrastructureLayer).bindTooltip("🌳 Flood Absorption Park", { permanent: true, direction: "center", className: 'map-tooltip' });
+        L.polygon(parkCoords, { color: '#10b981', weight: 2, fillColor: '#10b981', fillOpacity: 0.4 }).addTo(infrastructureLayer).bindTooltip("🌳 Flood Absorption Park", { permanent: true, direction: "center", className: 'map-tooltip' });
     }
 
     if (cityState.areas['Porur'].solved) {
@@ -331,14 +324,9 @@ let currentHeroTarget = 'Porur';
 
 function startStreetHero() {
     const unsolved = Object.keys(cityState.areas).find(k => !cityState.areas[k].solved);
-    
-    if (!unsolved) {
-        alert("All zones are already solved! You are a true hero.");
-        return;
-    }
+    if (!unsolved) { alert("All zones are already solved! You are a true hero."); return; }
 
     currentHeroTarget = unsolved;
-    
     const icon = document.getElementById('hero-problem-icon');
     const newsText = document.getElementById('breaking-news-text');
     
@@ -368,18 +356,13 @@ function moveHero(direction) {
     const character = document.getElementById('hero-character');
     character.classList.add('walking');
 
-    if (direction === 'right' && heroPosition < 80) {
-        heroPosition += heroSpeed;
-    } else if (direction === 'left' && heroPosition > 10) {
-        heroPosition -= heroSpeed;
-    }
+    if (direction === 'right' && heroPosition < 80) heroPosition += heroSpeed;
+    else if (direction === 'left' && heroPosition > 10) heroPosition -= heroSpeed;
 
     updateHeroPosition();
     
     clearTimeout(window.walkTimeout);
-    window.walkTimeout = setTimeout(() => {
-        character.classList.remove('walking');
-    }, 200);
+    window.walkTimeout = setTimeout(() => { character.classList.remove('walking'); }, 200);
 }
 
 function updateHeroPosition() {
@@ -428,35 +411,29 @@ function closeMissionModal() {
 }
 
 function solveHeroMission(cost, impact) {
-    if (cityState.budget < cost) {
-        alert("❌ INSUFFICIENT FUNDS! You don't have enough money in the treasury.");
-        return;
-    }
+    if (cityState.budget < cost) { alert("❌ INSUFFICIENT FUNDS! You don't have enough money in the treasury."); return; }
 
     cityState.budget -= cost;
-    
     const area = cityState.areas[currentHeroTarget];
     area.flood = 0;
     area.traffic = 0;
     area.solved = true;
-    
     cityState.happiness = Math.min(100, cityState.happiness + 15);
 
     const icon = document.getElementById('hero-problem-icon');
-    icon.innerText = "✅";
-    icon.style.borderColor = "#10b981";
-    
-    showFloatingText(`Mission Success! +15% Happiness`, '#10b981');
-
+    icon.innerText = "✅"; icon.style.borderColor = "#10b981";
     closeMissionModal();
+    
+    // Populate and show resolution modal
+    document.getElementById('draft-subject').innerText = `Emergency Repair: ${currentHeroTarget}`;
+    document.getElementById('draft-cost').innerText = `₹${cost} Crore`;
+    document.getElementById('draft-impact').innerText = `Restored city infrastructure.`;
+    document.getElementById('resolution-overlay').style.display = 'flex';
+
     setTimeout(() => {
         stopStreetHero();
-        updateDashboard();
-        renderCityInfrastructure();
-        saveGame();
-        checkWinCondition();
-        handleAreaCardClick(currentHeroTarget);
-    }, 1500);
+        updateDashboard(); renderCityInfrastructure(); saveGame(); checkWinCondition(); handleAreaCardClick(currentHeroTarget);
+    }, 1000);
 }
 
 // =============================================================
@@ -480,10 +457,7 @@ window.onload = function() {
     if(unsolved) handleAreaCardClick(unsolved);
 
     checkWinCondition(); 
-    setTimeout(() => { 
-        map.invalidateSize(); 
-        renderAreaCards(); 
-    }, 250);
+    setTimeout(() => { map.invalidateSize(); renderAreaCards(); }, 250);
 };
 
 function saveGame() { localStorage.setItem('twinCityState', JSON.stringify(cityState)); }
