@@ -1,5 +1,5 @@
 // === STATE ===
-const GAME_VERSION = "1.0.20"; // Forces cache clear for the new popup
+const GAME_VERSION = "1.0.21"; // Forces cache clear
 
 const cityState = {
     budget: 200, happiness: 65, selectedArea: null,
@@ -51,6 +51,7 @@ let currentProposal = null;
 let map;
 let mapMarkers = {}; 
 let infrastructureLayer; 
+let toastTimeout; // For the new auto-hide toast
 
 // =============================================================
 // PER-AREA MINI-CARDS & MAP ZOOM
@@ -73,32 +74,38 @@ function handleAreaCardClick(name) {
         panel.innerHTML = `<strong>${name}</strong><br>Flood Severity: ${area.flood}/100<br>Traffic: ${area.traffic}/100`;
     }
 
-    // Show City Alert Popup (ONLY if not solved)
+    // Trigger the auto-hide Toast
     if (!area.solved) {
-        showCityAlert(name, area);
+        showCityToast(name, area);
     }
 }
 
-function showCityAlert(name, area) {
-    document.getElementById('alert-city-name').innerText = `🚨 CITY ALERT: ${name.toUpperCase()}`;
+// NEW: Floating Toast Function
+function showCityToast(name, area) {
+    const toast = document.getElementById('city-toast');
+    if (!toast) return;
     
-    // Dynamic Flood Message
-    let floodDesc = area.flood > 70 ? "CRITICAL: Severe waterlogging. Streets are submerged." :
-                    area.flood > 40 ? "WARNING: Moderate flooding reported on main roads." :
-                    "MINOR: Small puddles, but drainage is holding up.";
-    document.getElementById('alert-flood-text').innerHTML = `<strong style="color:#ef4444;">Severity: ${area.flood}/100</strong><br>${floodDesc}`;
-
-    // Dynamic Traffic Message
-    let trafficDesc = area.traffic > 80 ? "CRITICAL: Complete gridlock. Ambulances are stuck." :
-                      area.traffic > 60 ? "WARNING: Heavy congestion during peak hours." :
-                      "MINOR: Smooth flow of traffic.";
-    document.getElementById('alert-traffic-text').innerHTML = `<strong style="color:#f59e0b;">Severity: ${area.traffic}/100</strong><br>${trafficDesc}`;
-
-    document.getElementById('problem-alert-modal').style.display = 'flex';
-}
-
-function closeProblemAlert() {
-    document.getElementById('problem-alert-modal').style.display = 'none';
+    let floodText = area.flood > 70 ? "severe flooding" : area.flood > 40 ? "moderate flooding" : "minor drainage issues";
+    let trafficText = area.traffic > 80 ? "complete gridlock" : area.traffic > 60 ? "heavy congestion" : "smooth traffic";
+    
+    toast.innerHTML = `
+        <div style="font-size: 24px;">🚨</div>
+        <div>
+            <strong style="color: #f8fafc; font-size: 15px; display: block; margin-bottom: 4px;">${name} City Report</strong>
+            <span style="color: #cbd5e1; font-size: 13px; line-height: 1.4;">
+                Reports indicate ${floodText} (Flood: ${area.flood}/100) and ${trafficText} (Traffic: ${area.traffic}/100).
+            </span>
+        </div>
+    `;
+    
+    // Show the toast
+    toast.classList.add('show');
+    
+    // Clear any existing timer and set a new one (4 seconds)
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => {
+        toast.classList.remove('show');
+    }, 4000);
 }
 
 function renderAreaCards() {
@@ -584,7 +591,6 @@ function initMap() {
         const marker = L.marker(loc.coords, { icon: customIcon }).addTo(map);
         mapMarkers[loc.name] = marker;
         
-        // UPDATED: Map marker clicks now trigger the same alert popup
         marker.on('click', function() { 
             handleAreaCardClick(loc.name);
         });
