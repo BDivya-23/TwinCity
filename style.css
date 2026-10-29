@@ -337,6 +337,17 @@ button.action:disabled { background: #475569; cursor: not-allowed; opacity: 0.7;
     line-height: 1.4;
 }
 
+/* === TIMER BLINKING ANIMATION === */
+@keyframes blink-red {
+    0%, 100% { color: #ef4444; }
+    50% { color: #fff; }
+}
+
+.timer-danger {
+    animation: blink-red 1s infinite;
+    font-weight: bold;
+}
+
 /* === RESPONSIVE === */
 @media (max-width: 1024px) {
     html, body { grid-template-columns: 1fr; grid-template-rows: 60px 1fr 300px; }
