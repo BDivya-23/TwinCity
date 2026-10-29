@@ -24,7 +24,7 @@ const advisorRules = [
 let currentProposal = null;
 let map;
 let mapMarkers = {}; 
-let ambientCars = []; 
+let infrastructureLayer; // Layer group for Map Transformations
 
 // =============================================================
 // PER-AREA MINI-CARDS
@@ -191,6 +191,7 @@ function approveProposal() {
     showFloatingText(`-₹${currentProposal.cost} Cr`, '#ef4444'); showFloatingText(`+${happinessBonus}% Happiness`, '#10b981');
     
     updateDashboard(); 
+    renderCityInfrastructure(); // Draw the new roads/metro on the map
     saveGame();
     
     document.getElementById('approve-btn').disabled = true;
@@ -311,6 +312,60 @@ function renderApproval() {
 }
 
 // =============================================================
+// MAP TRANSFORMATIONS (DIGITAL TWIN)
+// =============================================================
+function initInfrastructureLayer() {
+    if (typeof map !== 'undefined' && !infrastructureLayer) {
+        infrastructureLayer = L.layerGroup().addTo(map);
+    }
+}
+
+function renderCityInfrastructure() {
+    if (!infrastructureLayer) initInfrastructureLayer();
+    if (!infrastructureLayer) return;
+
+    infrastructureLayer.clearLayers(); // Redraw from scratch
+
+    // --- VADAPALANI: METRO LINE ---
+    if (cityState.areas['Vadapalani'].solved) {
+        const metroCoords = [
+            [13.0503, 80.2121], // Vadapalani
+            [13.0450, 80.2200], 
+            [13.0400, 80.2350],
+            [13.0350, 80.2500]
+        ];
+        const metroLine = L.polyline(metroCoords, {
+            color: '#3b82f6', weight: 6, opacity: 0.9, dashArray: '10, 10',
+            lineCap: 'round', className: 'metro-line-anim'
+        }).addTo(infrastructureLayer);
+        
+        L.circleMarker([13.0503, 80.2121], { radius: 6, color: '#fff', weight: 2, fillColor: '#3b82f6', fillOpacity: 1 }).addTo(infrastructureLayer);
+        metroLine.bindTooltip("🚇 New Metro Extension", { permanent: true, direction: "right", className: 'map-tooltip' });
+    }
+
+    // --- VELACHERY: GREEN FLOOD PARK ---
+    if (cityState.areas['Velachery'].solved) {
+        const parkCoords = [
+            [12.9800, 80.2150], [12.9780, 80.2210], [12.9720, 80.2220], [12.9710, 80.2160], [12.9750, 80.2130]
+        ];
+        L.polygon(parkCoords, {
+            color: '#10b981', weight: 2, fillColor: '#10b981', fillOpacity: 0.4, className: 'park-fade-in'
+        }).addTo(infrastructureLayer).bindTooltip("🌳 Flood Absorption Park", { permanent: true, direction: "center", className: 'map-tooltip' });
+    }
+
+    // --- PORUR: RING ROAD / HIGHWAY ---
+    if (cityState.areas['Porur'].solved) {
+        const ringRoadCoords = [
+            [13.0358, 80.1568], [13.0450, 80.1400], [13.0600, 80.1450], 
+            [13.0700, 80.1600], [13.0600, 80.1800], [13.0400, 80.1800], [13.0358, 80.1568]
+        ];
+        L.polyline(ringRoadCoords, {
+            color: '#f59e0b', weight: 8, opacity: 0.8, lineCap: 'round', lineJoin: 'round'
+        }).addTo(infrastructureLayer).bindTooltip("🛣️ New Porur Bypass", { permanent: true, direction: "center", className: 'map-tooltip' });
+    }
+}
+
+// =============================================================
 // INITIALIZATION & HELPERS
 // =============================================================
 window.onload = function() {
@@ -318,7 +373,9 @@ window.onload = function() {
     if (savedState) Object.assign(cityState, JSON.parse(savedState));
     
     initMap(); 
-    spawnTraffic(); 
+    initInfrastructureLayer();
+    renderCityInfrastructure(); // Draw saved infrastructure on load
+    
     updateDashboard(); 
     
     // Update hidden spans
@@ -360,22 +417,4 @@ function initMap() {
         mapMarkers[loc.name] = marker;
         marker.on('click', function() { handleAreaCardClick(loc.name); });
     });
-}
-
-function spawnTraffic() {
-    const emojis = ['🚙', '🚕', '🚌', '🚚', '🛵'];
-    for(let i=0; i<10; i++) {
-        const lat = 13.0500 + (Math.random() - 0.5) * 0.08;
-        const lng = 80.2100 + (Math.random() - 0.5) * 0.08;
-        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-        const rotation = Math.random() * 360;
-        
-        const carIcon = L.divIcon({ 
-            className: 'custom-div-icon', 
-            html: `<div style="font-size: 22px; opacity: 0.85; filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5)); transform: rotate(${rotation}deg);">${emoji}</div>`, 
-            iconSize: [22, 22], iconAnchor: [11, 11]
-        });
-        const marker = L.marker([lat, lng], { icon: carIcon, zIndexOffset: 100 }).addTo(map);
-        ambientCars.push(marker);
-    }
 }
